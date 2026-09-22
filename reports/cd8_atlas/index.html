@@ -2249,8 +2249,11 @@ function viridis(t) {
 const umapState = { name: null, overview: null, positions: [], colorKey: null, genes: [], geneValues: {}, selectedGroup: null };
 
 async function loadDataset(name) {
+  try {
   if (umapState.name !== name) {
-    const overview = await (await fetch(`umap/${name}/overview.json`)).json();
+    const response = await fetch(`umap/${name}/overview.json`);
+    if (!response.ok) throw new Error(`overview.json: HTTP ${response.status}`);
+    const overview = await response.json();
     umapState.name = name;
     umapState.overview = overview;
     umapState.genes = [];
@@ -2290,6 +2293,13 @@ async function loadDataset(name) {
   }
   drawUmap();
   renderMarkerPanel();
+  } catch (error) {
+    document.getElementById("datasetInfo").innerHTML =
+      `<span style="color:var(--danger)">Failed to load dataset ${esc(name)}: ${esc(String(error))}</span>`;
+    document.getElementById("umapSvg").innerHTML = "";
+    document.getElementById("umapLegend").innerHTML = "";
+    document.getElementById("markerPanel").innerHTML = "";
+  }
 }
 
 function currentValues() {
@@ -2311,7 +2321,7 @@ function drawUmap() {
   let colorOf = () => NA_COLOR;
   let order = umapState.positions.map((_, i) => i);
   if (info && info.kind === "numeric") {
-    const numbers = info.values.map(Number);
+    const numbers = info.values.map(v => v == null ? NaN : Number(v));
     const finite = numbers.filter(Number.isFinite);
     const min = finite.length ? Math.min(...finite) : 0;
     const max = finite.length ? Math.max(...finite) : 1;
