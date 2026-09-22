@@ -208,7 +208,12 @@ aside { background: var(--sidebar-bg); display: grid; grid-template-rows: auto a
   flex: 1 1 auto; min-width: 0; position: relative;
 }
 .h5ad-umap-svg { display: block; height: 100%; width: 100%; }
-.h5ad-umap-point { transition: r 0.08s ease, fill-opacity 0.08s ease; }
+.h5ad-umap-point { cursor: pointer; transition: r 0.08s ease, fill-opacity 0.08s ease; }
+.h5ad-umap-point.is-selected { stroke: var(--text); stroke-width: 1.5; }
+.h5ad-umap-mode-row { align-items: flex-start; display: flex; gap: 18px; }
+.h5ad-umap-mode-switch { display: flex; flex: 0 0 auto; font-size: 12px; gap: 14px; }
+.h5ad-umap-mode-switch label { align-items: center; color: var(--muted); display: flex; gap: 6px; }
+.h5ad-umap-mode-switch input { cursor: pointer; margin: 0; width: auto; }
 .h5ad-umap-tooltip {
   background: var(--tooltip-bg); border-radius: 4px; color: var(--bg); font: 11px var(--mono);
   padding: 3px 6px; pointer-events: none; position: absolute; transform: translate(-50%, -130%);
@@ -1924,7 +1929,13 @@ cache_file: data/dotplot_allmarkers_becc5bd6af8d.h5ad</p>
               </div>
               <div id="umapLegend" class="h5ad-umap-legend"></div>
             </div>
-            <div id="markerPanel" class="h5ad-marker-panel"></div>
+            <div class="h5ad-umap-mode-row">
+              <div class="h5ad-umap-mode-switch">
+                <label><input type="radio" name="umapMode" value="cell"> Select cell</label>
+                <label><input type="radio" name="umapMode" value="group" checked> Select group</label>
+              </div>
+              <div id="markerPanel" class="h5ad-marker-panel"></div>
+            </div>
           </div>
           <div class="h5ad-panel">
             <div id="datasetInfo" class="hint"></div>
@@ -2246,7 +2257,10 @@ function viridis(t) {
   return `rgb(${mix(0)},${mix(1)},${mix(2)})`;
 }
 
-const umapState = { name: null, overview: null, positions: [], colorKey: null, genes: [], geneValues: {}, selectedGroup: null };
+const umapState = {
+  name: null, overview: null, positions: [], colorKey: null, genes: [], geneValues: {},
+  selectedGroup: null, mode: "group", hoverGroup: null, hoverIndex: null,
+};
 
 async function loadDataset(name) {
   try {
@@ -2317,6 +2331,8 @@ function currentValues() {
 
 function drawUmap() {
   const svg = document.getElementById("umapSvg");
+  umapState.hoverGroup = null;
+  umapState.hoverIndex = null;
   const info = currentValues();
   let colorOf = () => NA_COLOR;
   let order = umapState.positions.map((_, i) => i);
@@ -2381,7 +2397,7 @@ function renderPanelRows() {
       <span class="h5ad-row-colorby"><input type="radio" name="colorby" value="${esc(key)}" ${active ? "checked" : ""}></span>
       <span class="h5ad-row-name" title="${esc(name)}">${esc(name)}</span>
       ${removable ? `<button class="h5ad-row-trash" data-gene="${esc(name)}" title="remove">&#10005;</button>` : "<span></span>"}
-      <span class="h5ad-row-value">${esc(summary)}</span></div>`;
+      <span class="h5ad-row-value" data-default="${esc(summary)}">${esc(summary)}</span></div>`;
   };
   overview.obs_columns.forEach(column => {
     const summary = column.kind === "categorical"
@@ -2509,13 +2525,16 @@ function renderMarkerPanel() {
   if (!markers || !markers.rows || !markers.rows.length) { element.innerHTML = ""; return; }
   const info = currentValues();
   const isClusterColumn = info && info.kind === "categorical" && markers.cluster_col && info.label === markers.cluster_col;
+  const group = umapState.hoverGroup != null ? umapState.hoverGroup : umapState.selectedGroup;
   let body;
-  if (!isClusterColumn) {
-    body = `<div class="hint">Color by <b>${esc(markers.cluster_col || "the cluster column")}</b> and click a legend group to see its markers.</div>`;
-  } else if (umapState.selectedGroup == null) {
-    body = '<div class="hint">Click a legend group to see its top markers.</div>';
+  if (umapState.mode === "cell") {
+    body = '<div class="hint">Switch to "Select group" mode to see cluster markers.</div>';
+  } else if (!isClusterColumn) {
+    body = `<div class="hint">Color by <b>${esc(markers.cluster_col || "the cluster column")}</b> and hover or click a group to see its markers.</div>`;
+  } else if (group == null) {
+    body = '<div class="hint">Hover or click a group (points or legend) to see its top markers.</div>';
   } else {
-    const rows = markers.rows.filter(row => String(row.cluster) === String(umapState.selectedGroup))
+    const rows = markers.rows.filter(row => String(row.cluster) === String(group))
       .sort((a, b) => (b.avg_log2FC ?? 0) - (a.avg_log2FC ?? 0)).slice(0, 8);
     const maxLfc = Math.max(...rows.map(row => row.avg_log2FC ?? 0), 0.001);
     body = '<div class="h5ad-marker-list">' + rows.map(row => {
@@ -2532,38 +2551,150 @@ function renderMarkerPanel() {
       </div>`;
     }).join("") + "</div>";
   }
-  const suffix = umapState.selectedGroup != null ? " — " + esc(String(umapState.selectedGroup)) : "";
+  const suffix = group != null && umapState.mode === "group" ? " — " + esc(String(group)) : "";
   element.innerHTML = `<div class="h5ad-marker-panel-title">FindAllMarkers${suffix}</div>` + body;
   element.querySelectorAll(".h5ad-marker-gene").forEach(gene =>
     gene.addEventListener("click", () => addGene(gene.dataset.gene)));
 }
 
-// ---------- tooltip ----------
-function setupTooltip() {
+// ---------- cell / group selection by hovering ----------
+function updatePanelCellValues(index) {
+  const overview = umapState.overview;
+  const format = (value, numeric) =>
+    value == null ? "NA" : (numeric ? Number(value).toFixed(3) : String(value));
+  document.querySelectorAll("#panelRows .h5ad-row-value").forEach((node, i) => {
+    if (i < overview.obs_columns.length) {
+      const column = overview.obs_columns[i];
+      node.textContent = format(column.values[index], column.kind === "numeric");
+    } else {
+      const gene = umapState.genes[i - overview.obs_columns.length];
+      const values = umapState.geneValues[gene];
+      node.textContent = values ? format(values[index], true) : "";
+    }
+  });
+}
+
+function resetPanelCellValues() {
+  document.querySelectorAll("#panelRows .h5ad-row-value").forEach(node => {
+    node.textContent = node.dataset.default || "";
+  });
+}
+
+function applyHoverOpacity(info) {
+  const active = umapState.hoverGroup != null ? umapState.hoverGroup : umapState.selectedGroup;
+  document.querySelectorAll("#umapSvg .h5ad-umap-point").forEach(circle => {
+    const value = info.values[Number(circle.dataset.i)];
+    circle.setAttribute("fill-opacity", active != null && value !== active ? "0.12" : "0.75");
+  });
+}
+
+function hoverCell(index, circle) {
+  if (umapState.hoverIndex === index) return;
+  clearCellHover();
+  umapState.hoverIndex = index;
+  circle.setAttribute("r", "5.5");
+  circle.setAttribute("fill-opacity", "1");
+  circle.classList.add("is-selected");
+  updatePanelCellValues(index);
+}
+
+function clearCellHover() {
+  if (umapState.hoverIndex == null) return;
+  const previous = document.querySelector(`#umapSvg circle[data-i="${umapState.hoverIndex}"]`);
+  if (previous) {
+    previous.setAttribute("r", "3.2");
+    previous.setAttribute("fill-opacity", "0.75");
+    previous.classList.remove("is-selected");
+  }
+  umapState.hoverIndex = null;
+}
+
+function hoverGroup(group) {
+  if (umapState.hoverGroup === group) return;
+  umapState.hoverGroup = group;
+  const info = currentValues();
+  if (info && info.kind === "categorical") applyHoverOpacity(info);
+  renderMarkerPanel();
+}
+
+function clearHover() {
+  if (umapState.mode === "cell") {
+    clearCellHover();
+    resetPanelCellValues();
+    return;
+  }
+  if (umapState.hoverGroup == null) return;
+  umapState.hoverGroup = null;
+  const info = currentValues();
+  if (info && info.kind === "categorical") applyHoverOpacity(info);
+  renderMarkerPanel();
+}
+
+function setupPointer() {
   const canvas = document.querySelector(".h5ad-umap-canvas");
   const tooltip = document.getElementById("umapTooltip");
-  canvas.addEventListener("mousemove", event => {
-    const target = event.target;
-    if (!target.classList || !target.classList.contains("h5ad-umap-point")) { tooltip.hidden = true; return; }
-    const info = currentValues();
-    if (!info) { tooltip.hidden = true; return; }
-    const index = Number(target.dataset.i);
-    const value = info.values[index];
-    tooltip.textContent = `${info.label}: ${info.kind === "numeric" ? Number(value).toFixed(2) : value}`;
+  const positionTooltip = target => {
     const canvasRect = canvas.getBoundingClientRect();
     const pointRect = target.getBoundingClientRect();
     tooltip.style.left = (pointRect.left + pointRect.width / 2 - canvasRect.left) + "px";
     tooltip.style.top = (pointRect.top - canvasRect.top) + "px";
     tooltip.hidden = false;
+  };
+  canvas.addEventListener("mousemove", event => {
+    const target = event.target;
+    const isPoint = target.classList && target.classList.contains("h5ad-umap-point");
+    if (!isPoint) { clearHover(); tooltip.hidden = true; return; }
+    const info = currentValues();
+    if (!info) { tooltip.hidden = true; return; }
+    const index = Number(target.dataset.i);
+    const value = info.values[index];
+    if (umapState.mode === "cell") {
+      hoverCell(index, target);
+      tooltip.textContent = `cell ${index} · ${info.label}: ` +
+        (info.kind === "numeric" ? (value == null ? "NA" : Number(value).toFixed(2)) : value);
+      positionTooltip(target);
+    } else {
+      if (info.kind === "categorical") {
+        hoverGroup(value);
+        tooltip.textContent = `${info.label}: ${value}`;
+      } else {
+        tooltip.textContent = `${info.label}: ` + (value == null ? "NA" : Number(value).toFixed(2));
+      }
+      positionTooltip(target);
+    }
   });
-  canvas.addEventListener("mouseleave", () => { tooltip.hidden = true; });
+  canvas.addEventListener("mouseleave", () => { clearHover(); tooltip.hidden = true; });
+  canvas.addEventListener("click", event => {
+    const target = event.target;
+    if (!target.classList || !target.classList.contains("h5ad-umap-point")) return;
+    if (umapState.mode !== "group") return;
+    const info = currentValues();
+    if (!info || info.kind !== "categorical") return;
+    const group = info.values[Number(target.dataset.i)];
+    umapState.selectedGroup = umapState.selectedGroup === group ? null : group;
+    drawUmap();
+    renderMarkerPanel();
+  });
+}
+
+function setupModeSwitch() {
+  document.querySelectorAll('input[name="umapMode"]').forEach(radio =>
+    radio.addEventListener("change", () => {
+      umapState.mode = radio.value;
+      umapState.hoverGroup = null;
+      umapState.hoverIndex = null;
+      resetPanelCellValues();
+      drawUmap();
+      renderMarkerPanel();
+    }));
 }
 
 // ---------- init ----------
 renderReportList();
 renderViewList();
 setupGeneInput();
-setupTooltip();
+setupPointer();
+setupModeSwitch();
 const stepBlocks = wrapStepBlocks();
 renderPipeline(stepBlocks);
 </script>
