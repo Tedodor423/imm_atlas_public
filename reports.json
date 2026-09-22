@@ -1,6 +1,15 @@
 [
   {
     "slug": "cd8_atlas",
+    "run": "20260922_151016_384463",
+    "title": "cd8_atlas",
+    "timestamp": "2026-09-22 15:10:16",
+    "n_figures": 75,
+    "n_datasets": 5,
+    "pdf_url": null
+  },
+  {
+    "slug": "cd8_atlas",
     "run": "20260922_142012_691011",
     "title": "cd8_atlas - scanorama with chemistry",
     "timestamp": "2026-09-22 14:20:12",
