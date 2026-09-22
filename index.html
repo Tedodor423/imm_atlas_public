@@ -4,38 +4,156 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>bioreport</title>
+
+<script>
+try { if (localStorage.getItem("bioreport-theme") === "dark") document.documentElement.dataset.theme = "dark"; } catch (e) {}
+</script>
 <style>
-
-:root { --ink: #1c2733; --muted: #67788a; --line: #dde4ea; --accent: #2563ab; --bg: #f6f8fa; }
+:root {
+  color-scheme: light;
+  --bg: #f6f7f9; --panel: #ffffff; --line: #d6dae1; --text: #171a1f; --muted: #626a73;
+  --accent: #f24e38; --danger: #8a2f20; --button-bg: #f7f9fb; --input-bg: #ffffff;
+  --hover: #fff0ed; --selected-bg: #ffe2dc; --pre-bg: #f3f5f7; --tooltip-bg: #1f252b;
+  --folder-bg: #f6c453; --folder-border: #b18a2f; --file-bg: #f8fafc; --file-border: #9aa4af;
+  --sidebar-bg: #fff4f1; --repo-bg: #fff8f6; --repo-compact-bg: #ffe5df;
+  --explorer-bg: #fbfcfd; --viewer-bg: #fffdfa;
+  --mono: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  font-family: Inter, "Segoe UI", system-ui, sans-serif;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #111417; --panel: #181c20; --line: #343a42; --text: #edf1f5; --muted: #a8b0ba;
+  --accent: #ff725f; --danger: #ff8b72; --button-bg: #20262c; --input-bg: #12161a;
+  --hover: #38201c; --selected-bg: #4a251f; --pre-bg: #12161a; --tooltip-bg: #f4f6f8;
+  --folder-bg: #d9a93a; --folder-border: #8f7028; --file-bg: #20262c; --file-border: #707985;
+  --sidebar-bg: #241714; --repo-bg: #201512; --repo-compact-bg: #321b17;
+  --explorer-bg: #161b20; --viewer-bg: #1b1a17;
+}
 * { box-sizing: border-box; }
-body { margin: 0; font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-       color: var(--ink); background: var(--bg); }
-header { background: #fff; border-bottom: 1px solid var(--line); padding: 18px 28px 0; }
-header h1 { margin: 4px 0 2px; font-size: 1.35rem; }
-header .meta { color: var(--muted); font-size: 0.85rem; margin-bottom: 12px; }
-header .meta a.pdf { margin-left: 10px; color: var(--accent); }
-a { color: var(--accent); text-decoration: none; }
-a:hover { text-decoration: underline; }
-main { max-width: 1080px; margin: 0 auto; padding: 20px 28px 60px; }
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--text); margin: 0; }
+a { color: inherit; }
 
-.report-card { display: block; background: #fff; border: 1px solid var(--line); border-radius: 8px;
-               padding: 14px 18px; margin-bottom: 12px; color: inherit; }
-.report-card:hover { border-color: var(--accent); text-decoration: none; }
-.report-card h2 { margin: 0 0 4px; font-size: 1.05rem; color: var(--accent); }
-.report-card .meta { color: var(--muted); font-size: 0.82rem; }
+header {
+  align-items: center; background: var(--panel); border-bottom: 1px solid var(--line);
+  display: grid; gap: 12px; grid-template-columns: auto minmax(0, 1fr) auto;
+  min-height: 52px; padding: 7px 18px; position: relative; z-index: 30;
+}
+h1 { align-items: center; display: inline-flex; font-size: 18px; gap: 8px; margin: 0; }
+.brand-logo {
+  align-items: center; background: var(--accent); border-radius: 6px; color: #fff;
+  display: inline-flex; font: 700 15px var(--mono); height: 24px; justify-content: center; width: 24px;
+}
+.brand-credit, .brand-credit:visited, .brand-credit:hover {
+  color: var(--muted); font-size: 9px; font-weight: 400; margin-left: 2px;
+  text-decoration: none; white-space: nowrap;
+}
+.repo-compact {
+  align-items: center; background: var(--repo-compact-bg); border: 1px solid var(--line);
+  border-radius: 6px; display: grid; gap: 8px; grid-template-columns: minmax(0, 1fr);
+  justify-self: center; min-height: 38px; padding: 4px 12px; width: min(760px, 100%);
+}
+.repo-title { font-size: 12px; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.repo-path { color: var(--muted); font: 11px var(--mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+button, .viewer-action-button {
+  background: var(--button-bg); border: 1px solid #b8c0ca; border-radius: 5px;
+  color: var(--text); cursor: pointer; font: inherit; font-size: 13px; padding: 7px 10px;
+  text-decoration: none;
+}
+button:hover, .viewer-action-button:hover { border-color: var(--accent); color: var(--accent); }
+input {
+  background: var(--input-bg); border: 1px solid #b8c0ca; border-radius: 5px;
+  color: var(--text); font: 13px var(--mono); min-width: 0; padding: 7px 8px; width: 100%;
+}
+.hint { color: var(--muted); font-size: 12px; line-height: 1.35; }
+.empty-state {
+  align-items: center; color: var(--muted); display: flex; font-size: 14px;
+  height: 100%; justify-content: center; min-height: 180px; text-align: center;
+}
+
+.theme-button { align-items: center; display: inline-flex; gap: 7px; justify-self: end; min-width: 82px; }
+.theme-icon { border: 2px solid currentColor; border-radius: 50%; display: inline-block; height: 14px; position: relative; width: 14px; }
+.theme-icon::after {
+  background: var(--button-bg); border-radius: 50%; content: ""; display: none;
+  height: 12px; left: 5px; position: absolute; top: -2px; width: 12px;
+}
+:root[data-theme="dark"] .theme-icon::after { display: block; }
+
+.file-row {
+  align-items: center; background: none; border: 1px solid transparent; border-radius: 4px;
+  color: inherit; cursor: pointer; display: grid; font: inherit; font-size: 13px; gap: 7px;
+  grid-template-columns: 20px minmax(0, 1fr) auto; min-height: 30px; padding: 5px 7px;
+  text-align: left; text-decoration: none; width: 100%;
+}
+.file-row:hover { background: var(--hover); border-color: transparent; color: inherit; }
+.file-row.selected {
+  background: var(--selected-bg); border-color: var(--accent);
+  box-shadow: inset 3px 0 0 var(--accent); font-weight: 650;
+}
+.file-name { align-items: baseline; display: inline-flex; min-width: 0; overflow: hidden; white-space: nowrap; }
+.file-name-base { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-size { color: var(--muted); font: 11px var(--mono); }
+.folder-icon {
+  background: var(--folder-bg); border: 1px solid var(--folder-border); border-radius: 2px;
+  display: inline-block; height: 13px; position: relative; width: 17px;
+}
+.folder-icon::before {
+  background: var(--folder-bg); border: 1px solid var(--folder-border); border-bottom: 0;
+  border-radius: 2px 2px 0 0; content: ""; height: 5px; left: 1px; position: absolute; top: -5px; width: 8px;
+}
+.file-icon {
+  background: var(--file-bg); border: 1px solid var(--file-border); border-radius: 2px;
+  display: inline-block; height: 16px; width: 13px;
+}
+.file-icon.h5ad { background: var(--selected-bg); border-color: var(--accent); }
+
+main { margin: 0 auto; max-width: 900px; padding: 20px 18px 60px; }
+.recent-list { display: grid; gap: 6px; }
+.recent {
+  border: 1px solid var(--line); border-radius: 5px; cursor: pointer; display: grid;
+  gap: 3px; padding: 8px; text-align: left; text-decoration: none;
+}
+.recent:hover { border-color: var(--accent); }
+.recent-kind { color: var(--accent); font-size: 11px; font-weight: 650; text-transform: uppercase; }
+.recent-main { font-size: 13px; overflow-wrap: anywhere; }
+.recent-sub { color: var(--muted); font: 12px var(--mono); overflow-wrap: anywhere; }
 </style>
 </head>
 <body>
-<header><h1>bioreport</h1><div class="meta">exported reports</div></header>
-<main id="reports"></main>
+
+<header>
+  <h1><span class="brand-logo">b</span>bioreport <a class="brand-credit" href="https://theo.nimrichtr.cz">&copy;David Theodor Nimrichtr</a></h1>
+  <div class="repo-compact"><div><div class="repo-title">Published reports</div><div class="repo-path">bioreport static export</div></div></div>
+  <button id="themeButton" class="theme-button"><span class="theme-icon"></span><span class="theme-label">Light</span></button>
+</header>
+
+<main><div id="reports" class="recent-list"></div></main>
 <script>
 const REPORTS = [{"slug": "cd8_atlas", "title": "cd8_atlas", "timestamp": "2026-09-21 14:31:01", "n_figures": 75, "n_datasets": 10, "pdf_url": null}];
 const esc = t => String(t).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+const themeButton = document.getElementById("themeButton");
+function applyTheme(theme) {
+  if (theme === "dark") document.documentElement.dataset.theme = "dark";
+  else delete document.documentElement.dataset.theme;
+  themeButton.querySelector(".theme-label").textContent = theme === "dark" ? "Dark" : "Light";
+}
+let currentTheme = "light";
+try { currentTheme = localStorage.getItem("bioreport-theme") || "light"; } catch (e) {}
+applyTheme(currentTheme);
+themeButton.addEventListener("click", () => {
+  currentTheme = currentTheme === "dark" ? "light" : "dark";
+  try { localStorage.setItem("bioreport-theme", currentTheme); } catch (e) {}
+  applyTheme(currentTheme);
+});
+
 document.getElementById("reports").innerHTML = REPORTS.map(r =>
-  `<a class="report-card" href="reports/${encodeURIComponent(r.slug)}/">
-     <h2>${esc(r.title)}</h2>
-     <div class="meta">${esc(r.timestamp)} &middot; ${r.n_figures} figures &middot; ${r.n_datasets} UMAP dataset(s)</div>
-   </a>`).join("") || "<p>No reports exported yet.</p>";
+  `<a class="recent" href="reports/${encodeURIComponent(r.slug)}/">
+     <span class="recent-kind">report</span>
+     <span class="recent-main">${esc(r.title)}</span>
+     <span class="recent-sub">${esc(r.timestamp)} &middot; ${r.n_figures} figures &middot; ${r.n_datasets} interactive dataset(s)</span>
+   </a>`).join("") || '<div class="empty-state">No reports published yet.</div>';
 </script>
 </body>
 </html>

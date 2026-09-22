@@ -4,79 +4,315 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>cd8_atlas</title>
+
+<script>
+try { if (localStorage.getItem("bioreport-theme") === "dark") document.documentElement.dataset.theme = "dark"; } catch (e) {}
+</script>
 <style>
-
-:root { --ink: #1c2733; --muted: #67788a; --line: #dde4ea; --accent: #2563ab; --bg: #f6f8fa; }
+:root {
+  color-scheme: light;
+  --bg: #f6f7f9; --panel: #ffffff; --line: #d6dae1; --text: #171a1f; --muted: #626a73;
+  --accent: #f24e38; --danger: #8a2f20; --button-bg: #f7f9fb; --input-bg: #ffffff;
+  --hover: #fff0ed; --selected-bg: #ffe2dc; --pre-bg: #f3f5f7; --tooltip-bg: #1f252b;
+  --folder-bg: #f6c453; --folder-border: #b18a2f; --file-bg: #f8fafc; --file-border: #9aa4af;
+  --sidebar-bg: #fff4f1; --repo-bg: #fff8f6; --repo-compact-bg: #ffe5df;
+  --explorer-bg: #fbfcfd; --viewer-bg: #fffdfa;
+  --mono: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  font-family: Inter, "Segoe UI", system-ui, sans-serif;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #111417; --panel: #181c20; --line: #343a42; --text: #edf1f5; --muted: #a8b0ba;
+  --accent: #ff725f; --danger: #ff8b72; --button-bg: #20262c; --input-bg: #12161a;
+  --hover: #38201c; --selected-bg: #4a251f; --pre-bg: #12161a; --tooltip-bg: #f4f6f8;
+  --folder-bg: #d9a93a; --folder-border: #8f7028; --file-bg: #20262c; --file-border: #707985;
+  --sidebar-bg: #241714; --repo-bg: #201512; --repo-compact-bg: #321b17;
+  --explorer-bg: #161b20; --viewer-bg: #1b1a17;
+}
 * { box-sizing: border-box; }
-body { margin: 0; font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-       color: var(--ink); background: var(--bg); }
-header { background: #fff; border-bottom: 1px solid var(--line); padding: 18px 28px 0; }
-header h1 { margin: 4px 0 2px; font-size: 1.35rem; }
-header .meta { color: var(--muted); font-size: 0.85rem; margin-bottom: 12px; }
-header .meta a.pdf { margin-left: 10px; color: var(--accent); }
-a { color: var(--accent); text-decoration: none; }
-a:hover { text-decoration: underline; }
-main { max-width: 1080px; margin: 0 auto; padding: 20px 28px 60px; }
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--text); margin: 0; }
+a { color: inherit; }
 
-nav { display: flex; gap: 4px; }
-nav button { border: 1px solid var(--line); border-bottom: none; background: var(--bg);
-             color: var(--muted); padding: 8px 18px; font-size: 0.9rem; cursor: pointer;
-             border-radius: 7px 7px 0 0; }
-nav button.active { background: #fff; color: var(--ink); font-weight: 600;
-                    position: relative; top: 1px; }
-main > section { display: none; background: #fff; border: 1px solid var(--line);
-                 border-radius: 0 8px 8px 8px; padding: 22px 26px; }
-main > section.active { display: block; }
-#tab-report img { max-width: 100%; height: auto; }
-#tab-report table { border-collapse: collapse; font-size: 0.85rem; display: block;
-                    overflow-x: auto; max-width: 100%; }
-#tab-report th, #tab-report td { border: 1px solid var(--line); padding: 4px 9px; }
-#tab-report th { background: var(--bg); }
-#tab-report h4, #tab-report h5 { color: var(--muted); font-weight: 600; }
-#tab-report code { background: var(--bg); padding: 1px 5px; border-radius: 4px; font-size: 0.85em; }
-#pipeline-container { overflow: auto; }
-#pipeline-container svg { font-family: inherit; }
-.node rect { rx: 6; stroke-width: 1.2; }
-.node text { font-size: 11px; fill: var(--ink); }
-.node.step rect { fill: #eef2f6; stroke: #9fb0c0; }
-.node.adata rect, .node.source rect { fill: #dcebfa; stroke: #5f93c8; }
-.node.input rect { fill: #f3eede; stroke: #c0af7f; }
-.node.figure rect { fill: #e7f3e7; stroke: #7fb07f; }
-.edge { stroke: #b6c2cd; stroke-width: 1.4; }
-.umap-controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
-                 margin-bottom: 14px; font-size: 0.9rem; }
-.umap-controls select, .umap-controls input, .umap-controls button {
-  font: inherit; padding: 5px 8px; border: 1px solid var(--line); border-radius: 6px; }
-.umap-controls button { background: var(--accent); color: #fff; border-color: var(--accent);
-                        cursor: pointer; }
-#gene-message { color: #b04030; font-size: 0.85rem; }
-#dataset-info { color: var(--muted); font-size: 0.82rem; margin-bottom: 10px; }
-.umap-layout { display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; }
-#umap-canvas { border: 1px solid var(--line); border-radius: 8px; background: #fff; }
-#umap-legend { font-size: 0.82rem; max-width: 240px; max-height: 600px; overflow-y: auto; }
-#umap-legend .swatch { display: inline-block; width: 11px; height: 11px; border-radius: 3px;
-                       margin-right: 6px; vertical-align: -1px; }
-#umap-legend .gradient { width: 160px; height: 12px; border-radius: 4px; margin: 6px 0; }
-#markers { margin-top: 26px; }
-#markers table { border-collapse: collapse; font-size: 0.83rem; }
-#markers th, #markers td { border: 1px solid var(--line); padding: 4px 10px; text-align: left; }
-#markers th { background: var(--bg); }
-#markers td a { cursor: pointer; }
+header {
+  align-items: center; background: var(--panel); border-bottom: 1px solid var(--line);
+  display: grid; gap: 12px; grid-template-columns: auto minmax(0, 1fr) auto;
+  min-height: 52px; padding: 7px 18px; position: relative; z-index: 30;
+}
+h1 { align-items: center; display: inline-flex; font-size: 18px; gap: 8px; margin: 0; }
+.brand-logo {
+  align-items: center; background: var(--accent); border-radius: 6px; color: #fff;
+  display: inline-flex; font: 700 15px var(--mono); height: 24px; justify-content: center; width: 24px;
+}
+.brand-credit, .brand-credit:visited, .brand-credit:hover {
+  color: var(--muted); font-size: 9px; font-weight: 400; margin-left: 2px;
+  text-decoration: none; white-space: nowrap;
+}
+.repo-compact {
+  align-items: center; background: var(--repo-compact-bg); border: 1px solid var(--line);
+  border-radius: 6px; display: grid; gap: 8px; grid-template-columns: minmax(0, 1fr);
+  justify-self: center; min-height: 38px; padding: 4px 12px; width: min(760px, 100%);
+}
+.repo-title { font-size: 12px; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.repo-path { color: var(--muted); font: 11px var(--mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+button, .viewer-action-button {
+  background: var(--button-bg); border: 1px solid #b8c0ca; border-radius: 5px;
+  color: var(--text); cursor: pointer; font: inherit; font-size: 13px; padding: 7px 10px;
+  text-decoration: none;
+}
+button:hover, .viewer-action-button:hover { border-color: var(--accent); color: var(--accent); }
+input {
+  background: var(--input-bg); border: 1px solid #b8c0ca; border-radius: 5px;
+  color: var(--text); font: 13px var(--mono); min-width: 0; padding: 7px 8px; width: 100%;
+}
+.hint { color: var(--muted); font-size: 12px; line-height: 1.35; }
+.empty-state {
+  align-items: center; color: var(--muted); display: flex; font-size: 14px;
+  height: 100%; justify-content: center; min-height: 180px; text-align: center;
+}
+
+.theme-button { align-items: center; display: inline-flex; gap: 7px; justify-self: end; min-width: 82px; }
+.theme-icon { border: 2px solid currentColor; border-radius: 50%; display: inline-block; height: 14px; position: relative; width: 14px; }
+.theme-icon::after {
+  background: var(--button-bg); border-radius: 50%; content: ""; display: none;
+  height: 12px; left: 5px; position: absolute; top: -2px; width: 12px;
+}
+:root[data-theme="dark"] .theme-icon::after { display: block; }
+
+.file-row {
+  align-items: center; background: none; border: 1px solid transparent; border-radius: 4px;
+  color: inherit; cursor: pointer; display: grid; font: inherit; font-size: 13px; gap: 7px;
+  grid-template-columns: 20px minmax(0, 1fr) auto; min-height: 30px; padding: 5px 7px;
+  text-align: left; text-decoration: none; width: 100%;
+}
+.file-row:hover { background: var(--hover); border-color: transparent; color: inherit; }
+.file-row.selected {
+  background: var(--selected-bg); border-color: var(--accent);
+  box-shadow: inset 3px 0 0 var(--accent); font-weight: 650;
+}
+.file-name { align-items: baseline; display: inline-flex; min-width: 0; overflow: hidden; white-space: nowrap; }
+.file-name-base { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-size { color: var(--muted); font: 11px var(--mono); }
+.folder-icon {
+  background: var(--folder-bg); border: 1px solid var(--folder-border); border-radius: 2px;
+  display: inline-block; height: 13px; position: relative; width: 17px;
+}
+.folder-icon::before {
+  background: var(--folder-bg); border: 1px solid var(--folder-border); border-bottom: 0;
+  border-radius: 2px 2px 0 0; content: ""; height: 5px; left: 1px; position: absolute; top: -5px; width: 8px;
+}
+.file-icon {
+  background: var(--file-bg); border: 1px solid var(--file-border); border-radius: 2px;
+  display: inline-block; height: 16px; width: 13px;
+}
+.file-icon.h5ad { background: var(--selected-bg); border-color: var(--accent); }
+
+main {
+  display: grid; gap: 0; height: calc(100vh - 68px); padding: 8px 12px;
+  grid-template-columns: minmax(200px, 290px) 8px minmax(0, 1fr) 8px minmax(250px, 360px);
+}
+.pane-resizer { position: relative; }
+.pane-resizer::before { background: var(--line); content: ""; inset: 0 3px; position: absolute; }
+aside, .viewer, .pipeline-pane {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 6px;
+  min-height: 0; overflow: hidden;
+}
+aside { background: var(--sidebar-bg); display: grid; grid-template-rows: auto auto auto minmax(0, 1fr); }
+.sidebar-heading {
+  border-bottom: 1px solid var(--line); color: var(--muted); font-size: 13px;
+  font-weight: 700; padding: 9px 11px;
+}
+.sidebar-list { min-height: 0; overflow: auto; padding: 6px; }
+
+.viewer { background: var(--viewer-bg); display: grid; grid-template-rows: auto minmax(0, 1fr); min-width: 0; }
+.viewer-header {
+  align-items: center; border-bottom: 1px solid var(--line); display: grid; gap: 8px;
+  grid-template-columns: minmax(0, 1fr) auto; min-width: 0;
+}
+.viewer-title {
+  color: var(--muted); font: 12px var(--mono); overflow: hidden; padding: 9px 11px;
+  text-overflow: ellipsis; white-space: nowrap;
+}
+.viewer-actions { align-items: center; display: flex; gap: 6px; padding-right: 8px; }
+.viewer-actions .viewer-action-button { padding: 5px 8px; font-size: 12px; }
+.viewer-body { min-height: 0; overflow: auto; padding: 14px; }
+.viewer-body pre {
+  background: var(--pre-bg); border: 1px solid var(--line); border-radius: 5px;
+  font: 12px var(--mono); margin: 0; overflow: auto; padding: 10px; white-space: pre-wrap;
+}
+
+.markdown-body { line-height: 1.5; max-width: 980px; }
+.markdown-body img { display: inline-block; margin: 6px 8px 10px 0; max-width: 100%; vertical-align: top; }
+.markdown-body table { border-collapse: collapse; margin: 10px 0; }
+.markdown-body th, .markdown-body td { border: 1px solid var(--line); padding: 4px 7px; }
+.markdown-body code { background: var(--pre-bg); border-radius: 4px; font: 0.85em var(--mono); padding: 1px 5px; }
+.markdown-body h4, .markdown-body h5 { color: var(--muted); }
+.markdown-body .markdown-step-block {
+  border-left: 4px solid transparent; border-radius: 5px; cursor: pointer;
+  margin: 1em 0; padding: 4px 8px; scroll-margin-top: 18px;
+}
+.markdown-body .markdown-step-block:hover { border-left-color: var(--line); }
+.markdown-body .markdown-step-highlight {
+  background: var(--selected-bg); border-left-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--selected-bg);
+}
+
+.pipeline-pane { background: var(--sidebar-bg); display: grid; grid-template-rows: auto auto minmax(0, 1fr); }
+.pipeline-header { border-bottom: 1px solid var(--line); color: var(--muted); font-size: 13px; font-weight: 700; padding: 9px 11px; }
+.pipeline-status {
+  border-bottom: 1px solid var(--line); color: var(--muted); font-size: 12px;
+  overflow: hidden; padding: 6px 8px; text-overflow: ellipsis; white-space: nowrap;
+}
+.pipeline-graph { min-height: 0; overflow: auto; padding: 8px; }
+.pipeline-graph svg {
+  background: var(--viewer-bg); border: 1px solid var(--line); border-radius: 5px; display: block;
+}
+.pipeline-edge { stroke: var(--muted); stroke-width: 1.5; }
+.pipeline-edge.figure-edge { stroke: #7fb8d8; }
+.pipeline-edge.load-edge { stroke-dasharray: 4 3; }
+.pipeline-node { cursor: pointer; }
+.pipeline-node:hover circle, .pipeline-node:hover rect { filter: drop-shadow(0 0 7px #f24e38); stroke: var(--accent); stroke-width: 2.3; }
+.pipeline-node.selected .pipeline-step-box {
+  fill: var(--selected-bg); filter: drop-shadow(0 0 5px var(--accent));
+  stroke: var(--accent); stroke-width: 2.4;
+}
+.pipeline-data-dot { fill: #f24e38; stroke: #922718; stroke-width: 1.5; }
+.pipeline-source-dot { fill: #f24e38; stroke: #922718; stroke-width: 2; }
+.pipeline-input-dot { fill: var(--file-bg); stroke: var(--file-border); stroke-width: 1.5; }
+.pipeline-figure-dot { fill: #bfe7ff; stroke: #6aa9cf; stroke-width: 1.5; }
+.pipeline-step-box { fill: var(--repo-bg); stroke: var(--line); stroke-width: 1.2; }
+.pipeline-label { fill: var(--text); font: 700 12px var(--mono); pointer-events: none; }
+.pipeline-small-label { fill: var(--muted); font: 700 11px var(--mono); pointer-events: none; }
+
+#view-image img { border: 1px solid var(--line); border-radius: 5px; max-width: 100%; }
+.file-row-indent { padding-left: 24px; }
+
+.h5ad-headline {
+  color: var(--muted); display: flex; flex-wrap: wrap; font: 12px var(--mono);
+  gap: 4px 18px; margin-bottom: 10px; max-width: 980px;
+}
+.h5ad-headline-size { color: var(--text); font-size: 14px; font-weight: 700; }
+.h5ad-columns { margin-top: 14px; max-width: 980px; }
+.h5ad-columns summary { cursor: pointer; font-weight: 700; margin-bottom: 4px; user-select: none; }
+.h5ad-columns summary:hover { color: var(--accent); }
+.h5ad-table { border-collapse: collapse; margin: 6px 0 14px; width: 100%; }
+.h5ad-table th, .h5ad-table td { border: 1px solid var(--line); font-size: 12px; padding: 4px 7px; text-align: left; vertical-align: top; }
+.h5ad-table th { color: var(--muted); font-weight: 600; }
+
+.h5ad-umap-layout { align-items: flex-start; display: flex; gap: 16px; width: 100%; }
+.h5ad-umap-plot-area { display: flex; flex: 2 1 0%; flex-direction: column; gap: 8px; min-width: 0; }
+.h5ad-umap-plot-row { align-items: flex-start; display: flex; flex: 1 1 auto; gap: 8px; }
+.h5ad-umap-canvas {
+  aspect-ratio: 4 / 3; background: var(--bg); border: 1px solid var(--line); border-radius: 6px;
+  flex: 1 1 auto; min-width: 0; position: relative;
+}
+.h5ad-umap-svg { display: block; height: 100%; width: 100%; }
+.h5ad-umap-point { transition: r 0.08s ease, fill-opacity 0.08s ease; }
+.h5ad-umap-tooltip {
+  background: var(--tooltip-bg); border-radius: 4px; color: var(--bg); font: 11px var(--mono);
+  padding: 3px 6px; pointer-events: none; position: absolute; transform: translate(-50%, -130%);
+  white-space: nowrap; z-index: 2;
+}
+.h5ad-umap-legend {
+  display: flex; flex-direction: column; font-size: 11px; gap: 4px; max-height: 420px;
+  max-width: 172px; overflow-y: auto; padding-right: 10px;
+}
+.h5ad-legend-title { font-weight: 700; margin-bottom: 2px; overflow-wrap: anywhere; }
+.h5ad-legend-item { align-items: center; border-radius: 3px; cursor: pointer; display: flex; gap: 5px; overflow-wrap: anywhere; padding: 1px 3px; }
+.h5ad-legend-item:hover { background: var(--line); }
+.h5ad-legend-item.is-active { background: var(--selected-bg); font-weight: 650; }
+.h5ad-legend-swatch { border-radius: 3px; flex: 0 0 auto; height: 10px; width: 10px; }
+.h5ad-legend-bar { border-radius: 3px; min-height: 80px; width: 14px; }
+.h5ad-legend-scale { display: flex; flex-direction: column; font: 10px var(--mono); justify-content: space-between; }
+
+.h5ad-panel {
+  border: 1px solid var(--line); border-radius: 6px; flex: 1 1 0%; max-height: 460px;
+  min-height: 0; min-width: 220px; overflow-y: auto; padding: 6px;
+}
+.h5ad-panel-rows { display: grid; gap: 6px; margin: 8px 0; }
+.h5ad-panel-row {
+  border: 1px solid transparent; border-radius: 4px; display: grid; gap: 3px 6px;
+  grid-template-areas: "colorby field trash" ". value value";
+  grid-template-columns: 16px minmax(0, 1fr) 20px; padding: 4px 2px 6px;
+}
+.h5ad-panel-row:hover { border-color: var(--line); }
+.h5ad-panel-row.is-color-by { background: color-mix(in srgb, var(--accent) 12%, transparent); border-color: var(--accent); }
+.h5ad-row-colorby { align-self: center; grid-area: colorby; text-align: center; }
+.h5ad-row-colorby input { cursor: pointer; margin: 0; width: auto; }
+.h5ad-row-name { font-size: 12px; grid-area: field; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.h5ad-row-value { color: var(--muted); font-size: 12px; grid-area: value; overflow-wrap: anywhere; }
+.h5ad-row-trash {
+  background: none; border: none; color: var(--muted); cursor: pointer; font-size: 12px;
+  grid-area: trash; line-height: 1; padding: 0;
+}
+.h5ad-row-trash:hover { border: none; color: var(--danger); }
+
+.h5ad-gene-field { display: flex; flex-direction: column; gap: 4px; }
+.h5ad-gene-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.h5ad-gene-chip {
+  align-items: center; background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border: 1px solid var(--accent); border-radius: 12px; display: inline-flex; font-size: 11px;
+  gap: 4px; padding: 2px 4px 2px 8px;
+}
+.h5ad-gene-chip-remove { background: none; border: none; border-radius: 50%; color: inherit; cursor: pointer; font-size: 10px; line-height: 1; padding: 2px 4px; }
+.h5ad-gene-chip-remove:hover { border: none; color: var(--danger); }
+.h5ad-gene-input-wrap { position: relative; }
+.h5ad-gene-input-wrap input { font-size: 12px; padding: 4px 7px; }
+.h5ad-row-dropdown {
+  background: var(--bg); border: 1px solid var(--line); border-radius: 4px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18); left: 0; max-height: 180px; overflow-y: auto;
+  position: absolute; right: 0; top: 100%; z-index: 10;
+}
+.h5ad-dropdown-item { cursor: pointer; font-size: 12px; padding: 4px 7px; }
+.h5ad-dropdown-item:hover { background: var(--line); }
+.gene-message { color: var(--danger); font-size: 11px; min-height: 14px; }
+
+.h5ad-marker-panel { flex: 1 1 auto; font-size: 11px; min-width: 0; }
+.h5ad-marker-panel-title { color: var(--muted); font-size: 11px; font-weight: 700; margin-bottom: 4px; text-transform: uppercase; }
+.h5ad-marker-list { display: flex; flex-direction: column; gap: 6px; max-height: 190px; overflow-y: auto; }
+.h5ad-marker-row { border-bottom: 1px solid var(--line); display: grid; gap: 3px; padding-bottom: 5px; }
+.h5ad-marker-row:last-child { border-bottom: none; }
+.h5ad-marker-gene { cursor: pointer; font-weight: 650; overflow-wrap: anywhere; }
+.h5ad-marker-gene:hover { color: var(--accent); }
+.h5ad-marker-meter { align-items: center; display: grid; gap: 6px; grid-template-columns: 58px 1fr 42px; }
+.h5ad-marker-meter-label { color: var(--muted); font-size: 10px; }
+.h5ad-marker-meter-track { background: var(--line); border-radius: 3px; height: 6px; overflow: hidden; }
+.h5ad-marker-meter-fill { background: var(--accent); display: block; height: 100%; }
+.h5ad-marker-meter-value { font: 10px var(--mono); text-align: right; }
+
+@media (max-width: 960px) {
+  main { grid-template-columns: 1fr; height: auto; }
+  .pane-resizer { display: none; }
+  aside, .viewer, .pipeline-pane { min-height: 240px; margin-bottom: 8px; }
+  .viewer { min-height: 460px; }
+  .h5ad-umap-layout { flex-wrap: wrap; }
+}
 </style>
 </head>
 <body>
+
 <header>
-  <a href="../../index.html">&larr; all reports</a>
-  <h1>cd8_atlas</h1>
-  <div class="meta">2026-09-21 14:31:01 </div>
-  <nav>
-    <button data-tab="report" class="active">Report</button>
-    <button data-tab="pipeline">Pipeline</button>
-    <button data-tab="umap">UMAP</button>
-  </nav>
+  <h1><span class="brand-logo">b</span>bioreport <a class="brand-credit" href="https://theo.nimrichtr.cz">&copy;David Theodor Nimrichtr</a></h1>
+  <div class="repo-compact"><div><div class="repo-title">cd8_atlas</div><div class="repo-path">2026-09-21 14:31:01 &middot; reports/cd8_atlas</div></div></div>
+  <button id="themeButton" class="theme-button"><span class="theme-icon"></span><span class="theme-label">Light</span></button>
 </header>
+
 <main>
-  <section id="tab-report" class="active"><hr>
+  <aside>
+    <div class="sidebar-heading">Reports</div>
+    <div id="reportList" class="sidebar-list"></div>
+    <div class="sidebar-heading">Files</div>
+    <div id="viewList" class="sidebar-list"></div>
+  </aside>
+  <div class="pane-resizer"></div>
+  <section class="viewer">
+    <div class="viewer-header">
+      <div id="viewerTitle" class="viewer-title">report_20260921_143101_936673.md</div>
+      <div class="viewer-actions"><a class="viewer-action-button" href="../../index.html">All reports</a></div>
+    </div>
+    <div class="viewer-body">
+      <div id="view-report" class="markdown-body"><hr>
 <h2>Table of Contents</h2>
 <!-- bioreport-toc-start -->
 <ul>
@@ -1675,233 +1911,651 @@ cache_file: data/dotplot_allmarkers_becc5bd6af8d.h5ad</p>
 <p><a href="figures/cd4_umap_IR_integrated_embedding_integrated_becc5bd6af8d.png"><img src="figures/cd4_umap_IR_integrated_embedding_integrated_becc5bd6af8d.png" width="50%"></a></p>
 <p><a href="figures/cd4_umap_IR_integrated_embedding_raw_becc5bd6af8d.png"><img src="figures/cd4_umap_IR_integrated_embedding_raw_becc5bd6af8d.png" width="50%"></a></p>
 <p><a href="figures/cd4_umap_IR_pca_embedding_integrated_becc5bd6af8d.png"><img src="figures/cd4_umap_IR_pca_embedding_integrated_becc5bd6af8d.png" width="50%"></a></p>
-<p><a href="figures/cd4_umap_IR_pca_embedding_raw_becc5bd6af8d.png"><img src="figures/cd4_umap_IR_pca_embedding_raw_becc5bd6af8d.png" width="50%"></a></p></section>
-  <section id="tab-pipeline"><div id="pipeline-container">Loading&hellip;</div></section>
-  <section id="tab-umap">
-    <div class="umap-controls">
-      <label>dataset <select id="dataset-select"></select></label>
-      <label>color by <select id="color-select"></select></label>
-      <input id="gene-input" placeholder="gene (e.g. PDCD1)" size="14">
-      <button id="gene-button">color by gene</button>
-      <span id="gene-message"></span>
+<p><a href="figures/cd4_umap_IR_pca_embedding_raw_becc5bd6af8d.png"><img src="figures/cd4_umap_IR_pca_embedding_raw_becc5bd6af8d.png" width="50%"></a></p></div>
+      <div id="view-image" hidden><img id="viewImage" alt=""></div>
+      <div id="view-umap" class="h5ad-summary" hidden>
+        <div id="h5adHeadline" class="h5ad-headline"></div>
+        <div class="h5ad-umap-layout">
+          <div class="h5ad-umap-plot-area">
+            <div class="h5ad-umap-plot-row">
+              <div class="h5ad-umap-canvas">
+                <svg id="umapSvg" class="h5ad-umap-svg" viewBox="0 0 460 345" xmlns="http://www.w3.org/2000/svg"></svg>
+                <div id="umapTooltip" class="h5ad-umap-tooltip" hidden></div>
+              </div>
+              <div id="umapLegend" class="h5ad-umap-legend"></div>
+            </div>
+            <div id="markerPanel" class="h5ad-marker-panel"></div>
+          </div>
+          <div class="h5ad-panel">
+            <div id="datasetInfo" class="hint"></div>
+            <div id="panelRows" class="h5ad-panel-rows"></div>
+            <div class="h5ad-gene-field">
+              <div id="geneChips" class="h5ad-gene-chips"></div>
+              <div class="h5ad-gene-input-wrap">
+                <input id="geneInput" placeholder="Add a gene..." autocomplete="off">
+                <div id="geneDropdown" class="h5ad-row-dropdown" hidden></div>
+              </div>
+              <div id="geneMessage" class="gene-message"></div>
+            </div>
+          </div>
+        </div>
+        <details class="h5ad-columns"><summary>obs columns</summary>
+          <table class="h5ad-table" id="obsTable"></table>
+        </details>
+      </div>
     </div>
-    <div id="dataset-info"></div>
-    <div class="umap-layout">
-      <canvas id="umap-canvas" width="760" height="620"></canvas>
-      <div id="umap-legend"></div>
-    </div>
-    <div id="markers"></div>
   </section>
+  <div class="pane-resizer"></div>
+  <aside class="pipeline-pane">
+    <div class="pipeline-header">Pipeline view</div>
+    <div id="pipelineStatus" class="pipeline-status">Loading&hellip;</div>
+    <div id="pipelineGraph" class="pipeline-graph"><div class="empty-state">Loading&hellip;</div></div>
+  </aside>
 </main>
 <script>
 const DATASETS = [{"name": "pca_umap_40eb994576d9", "label": "pca_umap"}, {"name": "integrate_scanorama_64b8d8f8fd17", "label": "integrate_scanorama"}, {"name": "umap_integrated_52e1e767cc5a", "label": "umap_integrated"}, {"name": "label_states_36cd14246a12", "label": "label_states"}, {"name": "dotplot_allmarkers_f57a78431c8f", "label": "dotplot_allmarkers"}, {"name": "pca_umap_362003242cf6", "label": "pca_umap"}, {"name": "integrate_scanorama_e5b2550ba718", "label": "integrate_scanorama"}, {"name": "umap_integrated_576144d5a952", "label": "umap_integrated"}, {"name": "label_states_ea18330cda11", "label": "label_states"}, {"name": "dotplot_allmarkers_becc5bd6af8d", "label": "dotplot_allmarkers"}];
+const FILES = ["figures/Wong2022_PrC_prostate_qc_before_total_counts_hist_1ad236b786c6.png", "figures/Wong2022_PrC_prostate_qc_before_pct_counts_mt_hist_1ad236b786c6.png", "figures/Wong2022_PrC_prostate_qc_before_pct_counts_mt_violin_1ad236b786c6.png", "figures/Wong2022_PrC_prostate_qc_before_scatter_genes_total_mt_1ad236b786c6.png", "figures/Wong2022_PrC_prostate_qc_after_total_counts_MAD=5_1ad236b786c6.png", "figures/Wong2022_PrC_prostate_qc_after_pct_counts_mt_MAD=5_1ad236b786c6.png", "figures/Wong2022_PrC_prostate_qc_after_pct_counts_mt_violin_MAD=5_1ad236b786c6.png", "figures/Wong2022_PrC_prostate_qc_after_scatter_genes_total_mt_MAD=5_1ad236b786c6.png", "figures/Wong2022_PrC_prostate_qc_scrublet_histogram_1ad236b786c6.png", "figures/cohort_overview_1ad236b786c6.png", "figures/normalisation_total_counts_hist_82e766421f9f.png", "figures/normalisation_log1p_hist_82e766421f9f.png", "figures/t_cell_selection_scores_199493b94c0e.png", "figures/normalisation_total_counts_hist_e8459ad6a09a.png", "figures/normalisation_log1p_hist_e8459ad6a09a.png", "figures/hvg_before_seurat_5000_21bcb1c06f3f.png", "figures/hvg_after_seurat_5000_21bcb1c06f3f.png", "figures/top20_expr_genes_21bcb1c06f3f.png", "figures/cd8_umap_pca_pre_integration_40eb994576d9.png", "figures/cd8_umap_pca_vs_integrated_before_52e1e767cc5a.png", "figures/cd8_umap_pca_vs_integrated_after_52e1e767cc5a.png", "figures/cd8_sanity_check_scores_36cd14246a12.png", "figures/umap_plot_cd8_overview_36cd14246a12.png", "figures/cd8_umap_disease_36cd14246a12.png", "figures/cd8_umap_disease_detail_36cd14246a12.png", "figures/cd8_umap_state_markers_608bf21b49d7.png", "figures/cd8_umap_celltypes_integrated_3fa0be10f751.png", "figures/cd8_umap_celltypes_pca_3fa0be10f751.png", "figures/umap_plot_cd8_umap_scores_integrated_vs_raw_3fa0be10f751.png", "figures/cd8_dotplot_IR_X_leiden_integrated_ffb874e29949.png", "figures/cd8_dotplot_IR_X_state_integrated_ffb874e29949.png", "figures/cd8_dotplot_IR_PBMC_vs_TIL_integrated_ffb874e29949.png", "figures/cd8_dotplot_IR_X_leiden_raw_ffb874e29949.png", "figures/cd8_dotplot_IR_X_state_raw_ffb874e29949.png", "figures/cd8_dotplot_IR_PBMC_vs_TIL_raw_ffb874e29949.png", "figures/cd8_boxplot_IR_X_leiden_integrated_ffb874e29949.png", "figures/cd8_stripplot_IR_X_leiden_integrated_ffb874e29949.png", "figures/cd8_boxplot_IR_X_leiden_raw_ffb874e29949.png", "figures/cd8_stripplot_IR_X_leiden_raw_ffb874e29949.png", "figures/dotplot_leiden_allmarkers_f57a78431c8f.png", "figures/cd8_umap_IR_integrated_embedding_integrated_f57a78431c8f.png", "figures/cd8_umap_IR_integrated_embedding_raw_f57a78431c8f.png", "figures/cd8_umap_IR_pca_embedding_integrated_f57a78431c8f.png", "figures/cd8_umap_IR_pca_embedding_raw_f57a78431c8f.png", "figures/normalisation_total_counts_hist_16268254b866.png", "figures/normalisation_log1p_hist_16268254b866.png", "figures/hvg_before_seurat_5000_fe21fd8544a3.png", "figures/hvg_after_seurat_5000_fe21fd8544a3.png", "figures/top20_expr_genes_fe21fd8544a3.png", "figures/cd4_umap_pca_pre_integration_362003242cf6.png", "figures/cd4_umap_pca_vs_integrated_before_576144d5a952.png", "figures/cd4_umap_pca_vs_integrated_after_576144d5a952.png", "figures/cd4_sanity_check_scores_ea18330cda11.png", "figures/umap_plot_cd4_overview_ea18330cda11.png", "figures/cd4_umap_disease_ea18330cda11.png", "figures/cd4_umap_disease_detail_ea18330cda11.png", "figures/cd4_umap_state_markers_d68f5262d37a.png", "figures/cd4_umap_celltypes_integrated_aa210545f29b.png", "figures/cd4_umap_celltypes_pca_aa210545f29b.png", "figures/umap_plot_cd4_umap_scores_integrated_vs_raw_aa210545f29b.png", "figures/cd4_dotplot_IR_X_leiden_integrated_bcf54a286095.png", "figures/cd4_dotplot_IR_X_state_integrated_bcf54a286095.png", "figures/cd4_dotplot_IR_PBMC_vs_TIL_integrated_bcf54a286095.png", "figures/cd4_dotplot_IR_X_leiden_raw_bcf54a286095.png", "figures/cd4_dotplot_IR_X_state_raw_bcf54a286095.png", "figures/cd4_dotplot_IR_PBMC_vs_TIL_raw_bcf54a286095.png", "figures/cd4_boxplot_IR_X_leiden_integrated_bcf54a286095.png", "figures/cd4_stripplot_IR_X_leiden_integrated_bcf54a286095.png", "figures/cd4_boxplot_IR_X_leiden_raw_bcf54a286095.png", "figures/cd4_stripplot_IR_X_leiden_raw_bcf54a286095.png", "figures/dotplot_leiden_allmarkers_becc5bd6af8d.png", "figures/cd4_umap_IR_integrated_embedding_integrated_becc5bd6af8d.png", "figures/cd4_umap_IR_integrated_embedding_raw_becc5bd6af8d.png", "figures/cd4_umap_IR_pca_embedding_integrated_becc5bd6af8d.png", "figures/cd4_umap_IR_pca_embedding_raw_becc5bd6af8d.png"];
 const HAS_PIPELINE = false;
+const SLUG = "cd8_atlas";
+const REPORT_FILENAME = "report_20260921_143101_936673.md";
 const esc = t => String(t).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const truncate = (t, n) => t.length > n ? t.slice(0, n - 1) + "\u2026" : t;
+const truncate = (t, n) => (t = String(t), t.length > n ? t.slice(0, n - 1) + "…" : t);
 
-// --- tabs ---
-document.querySelectorAll("nav button").forEach(button => button.addEventListener("click", () => {
-  document.querySelectorAll("nav button").forEach(b => b.classList.toggle("active", b === button));
-  document.querySelectorAll("main > section").forEach(s =>
-    s.classList.toggle("active", s.id === "tab-" + button.dataset.tab));
-}));
-if (!HAS_PIPELINE) document.querySelector('[data-tab="pipeline"]').style.display = "none";
-if (!DATASETS.length) document.querySelector('[data-tab="umap"]').style.display = "none";
+const themeButton = document.getElementById("themeButton");
+function applyTheme(theme) {
+  if (theme === "dark") document.documentElement.dataset.theme = "dark";
+  else delete document.documentElement.dataset.theme;
+  themeButton.querySelector(".theme-label").textContent = theme === "dark" ? "Dark" : "Light";
+}
+let currentTheme = "light";
+try { currentTheme = localStorage.getItem("bioreport-theme") || "light"; } catch (e) {}
+applyTheme(currentTheme);
+themeButton.addEventListener("click", () => {
+  currentTheme = currentTheme === "dark" ? "light" : "dark";
+  try { localStorage.setItem("bioreport-theme", currentTheme); } catch (e) {}
+  applyTheme(currentTheme);
+});
 
-// --- pipeline graph ---
-const NODE_SIZES = { source: [170, 34], adata: [170, 34], step: [190, 32],
-                     input: [150, 30], figure: [130, 26] };
-async function renderPipeline() {
-  const container = document.getElementById("pipeline-container");
+
+// ---------- sidebar ----------
+async function renderReportList() {
+  let manifest = [];
+  try { manifest = await (await fetch("../../reports.json")).json(); } catch (error) {}
+  const element = document.getElementById("reportList");
+  element.innerHTML = manifest.map(r => `
+    <a class="file-row ${r.slug === SLUG ? "selected" : ""}" href="../${encodeURIComponent(r.slug)}/">
+      <span><span class="folder-icon"></span></span>
+      <span class="file-name"><span class="file-name-base">${esc(r.title)}</span></span>
+      <span class="file-size">${esc(String(r.timestamp || "").slice(0, 10))}</span>
+    </a>`).join("") || '<div class="hint" style="padding:4px 7px">this report only</div>';
+}
+
+function renderViewList() {
+  const rows = [`<button class="file-row selected" data-view="report">
+      <span><span class="file-icon"></span></span>
+      <span class="file-name"><span class="file-name-base">${esc(REPORT_FILENAME)}</span></span>
+      <span class="file-size">md</span></button>`];
+  DATASETS.forEach(d => rows.push(`<button class="file-row" data-view="umap:${esc(d.name)}">
+      <span><span class="file-icon h5ad"></span></span>
+      <span class="file-name"><span class="file-name-base">${esc(d.label)}</span></span>
+      <span class="file-size">h5ad</span></button>`));
+  if (FILES.length) {
+    rows.push(`<button class="file-row" id="figuresToggle">
+      <span><span class="folder-icon"></span></span>
+      <span class="file-name"><span class="file-name-base">figures</span></span>
+      <span class="file-size">${FILES.length}</span></button>`);
+    rows.push('<div id="figureRows" hidden>' + FILES.map(f => `
+      <button class="file-row file-row-indent" data-view="figure:${esc(f)}">
+        <span><span class="file-icon"></span></span>
+        <span class="file-name"><span class="file-name-base">${esc(f.split("/").pop())}</span></span>
+      </button>`).join("") + "</div>");
+  }
+  const element = document.getElementById("viewList");
+  element.innerHTML = rows.join("");
+  element.querySelectorAll(".file-row[data-view]").forEach(row =>
+    row.addEventListener("click", () => switchView(row.dataset.view)));
+  const toggle = document.getElementById("figuresToggle");
+  if (toggle) toggle.addEventListener("click", () => {
+    const box = document.getElementById("figureRows");
+    box.hidden = !box.hidden;
+  });
+}
+
+function switchView(view) {
+  document.querySelectorAll("#viewList .file-row[data-view]").forEach(row =>
+    row.classList.toggle("selected", row.dataset.view === view));
+  const reportView = document.getElementById("view-report");
+  const umapView = document.getElementById("view-umap");
+  const imageView = document.getElementById("view-image");
+  reportView.hidden = true; umapView.hidden = true; imageView.hidden = true;
+  const title = document.getElementById("viewerTitle");
+  if (view === "report") {
+    reportView.hidden = false;
+    title.textContent = REPORT_FILENAME;
+  } else if (view.startsWith("umap:")) {
+    umapView.hidden = false;
+    const name = view.slice(5);
+    title.textContent = "cache/" + name + ".h5ad — interactive UMAP (freezeframe)";
+    loadDataset(name);
+  } else if (view.startsWith("figure:")) {
+    const path = view.slice(7);
+    imageView.hidden = false;
+    document.getElementById("viewImage").src = path;
+    title.textContent = path;
+    const box = document.getElementById("figureRows");
+    if (box && box.hidden) box.hidden = false;
+  }
+}
+
+// ---------- report step blocks ----------
+function wrapStepBlocks() {
+  const container = document.getElementById("view-report");
+  const blocks = [];
+  let element = container.firstElementChild;
+  while (element) {
+    const next = element.nextElementSibling;
+    const bodyText = next ? (next.textContent || "").trim() : "";
+    const isStep = element.tagName === "H4" && bodyText.startsWith("function:");
+    const isLoad = element.tagName === "H4" && bodyText.startsWith("file_version:");
+    if (!isStep && !isLoad) { element = next; continue; }
+    const block = document.createElement("div");
+    block.className = "markdown-step-block";
+    container.insertBefore(block, element);
+    let node = element;
+    while (node) {
+      const after = node.nextElementSibling;
+      block.appendChild(node);
+      if (after && ["H1", "H2", "H3", "H4", "HR"].includes(after.tagName)) break;
+      node = after;
+    }
+    if (isStep) blocks.push(block);
+    element = block.nextElementSibling;
+  }
+  return blocks;
+}
+
+function selectStep(stepNumber, scroll) {
+  document.querySelectorAll(".markdown-step-block").forEach(block =>
+    block.classList.toggle("markdown-step-highlight", block.dataset.step === String(stepNumber)));
+  document.querySelectorAll("#pipelineGraph .pipeline-node").forEach(g =>
+    g.classList.toggle("selected", g.dataset.step === String(stepNumber)));
+  if (scroll) {
+    switchView("report");
+    const target = document.querySelector(`.markdown-step-block[data-step="${stepNumber}"]`);
+    if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}
+
+// ---------- pipeline ----------
+function svgLine(x1, y1, x2, y2, cls, arrow) {
+  return `<line class="${cls}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"${arrow ? ' marker-end="url(#pipelineArrow)"' : ""}></line>`;
+}
+
+function layoutPipeline(graph) {
+  const byId = {};
+  graph.nodes.forEach(node => (byId[node.id] = node));
+  const SPINE_X = 300;
+  const spine = graph.nodes.filter(node => node.type === "source" || node.type === "adata");
+  const pos = {}, stepMeta = {};
+  let y = 80, maxX = SPINE_X + 220;
+  spine.forEach(node => {
+    pos[node.id] = { x: SPINE_X, y };
+    const figureEdges = graph.edges.filter(edge => edge.type === "figure" && edge.from === node.id);
+    figureEdges.forEach((edge, index) => {
+      const column = Math.floor(index / 3), row = index % 3;
+      pos[edge.to] = { x: SPINE_X + 210 + column * 150, y: y - 34 + row * 34 };
+      maxX = Math.max(maxX, pos[edge.to].x + 150);
+    });
+    const stepEdge = graph.edges.find(edge => edge.type === "step" && edge.from === node.id);
+    if (!stepEdge) { y += 110; return; }
+    const step = byId[stepEdge.step_id];
+    const params = step && step.parameters ? Object.entries(step.parameters) : [];
+    const lines = params.slice(0, 3).map(([key, value]) => truncate(key + ": " + value, 34));
+    if (params.length > 3) lines.push("+" + (params.length - 3) + " more");
+    const height = Math.max(56, 34 + (lines.length + 1) * 16);
+    const stepY = y + 44 + height / 2;
+    if (step) { pos[step.id] = { x: SPINE_X, y: stepY }; stepMeta[step.id] = { lines, height }; }
+    const inputEdges = graph.edges.filter(edge => edge.type === "load_side" && edge.to === stepEdge.step_id);
+    inputEdges.forEach((edge, index) => {
+      pos[edge.from] = { x: SPINE_X - 240, y: stepY + (index - (inputEdges.length - 1) / 2) * 40 };
+    });
+    y = y + 44 + height + 44;
+  });
+  return { pos, stepMeta, width: maxX + 40, height: y + 40 };
+}
+
+async function renderPipeline(stepBlocks) {
+  const statusElement = document.getElementById("pipelineStatus");
+  const graphElement = document.getElementById("pipelineGraph");
+  if (!HAS_PIPELINE) {
+    statusElement.textContent = "No pipeline graph in this export.";
+    graphElement.innerHTML = '<div class="empty-state">No pipeline graph.</div>';
+    return;
+  }
   let graph;
   try { graph = await (await fetch("pipeline.json")).json(); }
-  catch (error) { container.textContent = "No pipeline graph available."; return; }
+  catch (error) {
+    statusElement.textContent = "No pipeline graph in this export.";
+    graphElement.innerHTML = '<div class="empty-state">No pipeline graph.</div>';
+    return;
+  }
+  statusElement.textContent = REPORT_FILENAME;
   const byId = {};
-  graph.nodes.forEach(node => byId[node.id] = node);
-  let maxX = 0, maxY = 0;
-  graph.nodes.forEach(node => {
-    maxX = Math.max(maxX, node.x + 180);
-    maxY = Math.max(maxY, node.y + 60);
-  });
-  const parts = [];
+  graph.nodes.forEach(node => (byId[node.id] = node));
+  const { pos, stepMeta, width, height } = layoutPipeline(graph);
+  const parts = [
+    '<defs><marker id="pipelineArrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">' +
+    '<path d="M 0 0 L 8 4 L 0 8 z" fill="#626a73"></path></marker></defs>'
+  ];
   graph.edges.forEach(edge => {
-    let x1, y1, x2, y2;
-    if (edge.type === "load_top") { ({x1, y1, x2, y2} = edge); }
-    else {
-      const a = byId[edge.from], b = byId[edge.to];
-      if (!a || !b) return;
-      x1 = a.x; y1 = a.y; x2 = b.x; y2 = b.y;
+    if (edge.type === "load_top") {
+      const target = pos[edge.to];
+      if (target) parts.push(svgLine(target.x, target.y - 58, target.x, target.y - 19, "pipeline-edge load-edge", true));
+      return;
     }
-    parts.push(`<line class="edge" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"></line>`);
+    const a = pos[edge.from], b = pos[edge.to];
+    if (!a || !b) return;
+    if (edge.type === "step") {
+      const meta = stepMeta[edge.step_id], stepPos = pos[edge.step_id];
+      if (meta && stepPos) {
+        parts.push(svgLine(a.x, a.y + 16, stepPos.x, stepPos.y - meta.height / 2 - 2, "pipeline-edge", true));
+        parts.push(svgLine(stepPos.x, stepPos.y + meta.height / 2, b.x, b.y - 17, "pipeline-edge", true));
+      } else {
+        parts.push(svgLine(a.x, a.y + 16, b.x, b.y - 17, "pipeline-edge", true));
+      }
+    } else if (edge.type === "figure") {
+      parts.push(svgLine(a.x + 15, a.y, b.x - 13, b.y, "pipeline-edge figure-edge", false));
+    } else if (edge.type === "load_side") {
+      const stepPos = pos[edge.to];
+      if (stepPos) parts.push(svgLine(a.x + 10, a.y, stepPos.x - 117, stepPos.y, "pipeline-edge load-edge", true));
+    }
   });
   graph.nodes.forEach(node => {
-    const [w, h] = NODE_SIZES[node.type] || [150, 30];
-    const label = truncate(node.label || "", 26);
-    const tooltip = node.type === "step" && node.parameter_text
-      ? `${node.label}\n${node.parameter_text}` : (node.path || node.label || "");
-    let body = `<rect x="${node.x - w / 2}" y="${node.y - h / 2}" width="${w}" height="${h}" rx="6"></rect>
-      <text x="${node.x}" y="${node.y + 4}" text-anchor="middle">${esc(label)}</text>
-      <title>${esc(tooltip)}</title>`;
-    if (node.type === "figure" && node.path)
-      body = `<a href="${esc(node.path)}" target="_blank">${body}</a>`;
-    parts.push(`<g class="node ${esc(node.type)}">${body}</g>`);
+    const p = pos[node.id];
+    if (!p) return;
+    if (node.type === "source" || node.type === "adata") {
+      const dotClass = node.type === "source" ? "pipeline-source-dot" : "pipeline-data-dot";
+      const base = String(node.path || "").split("/").pop() || "";
+      const stem = base.endsWith(".h5ad") ? base.slice(0, -5) : base;
+      const dataset = DATASETS.find(d => d.name === stem);
+      parts.push(`<g class="pipeline-node"${dataset ? ` data-dataset="${esc(dataset.name)}"` : ""}>
+        <circle class="${dotClass}" cx="${p.x}" cy="${p.y}" r="15"></circle>
+        <text class="pipeline-label" x="${p.x + 24}" y="${p.y + 4}">${esc(truncate(node.label, 24))}</text>
+        <title>${esc(node.path || node.label)}${dataset ? " — click to open the interactive UMAP" : ""}</title></g>`);
+    } else if (node.type === "step") {
+      const meta = stepMeta[node.id], boxWidth = 230;
+      if (!meta) return;
+      const top = p.y - meta.height / 2;
+      const labels = [`<text class="pipeline-label" x="${p.x}" y="${top + 22}" text-anchor="middle">${esc(truncate(node.label, 28))}</text>`];
+      meta.lines.forEach((line, index) => labels.push(
+        `<text class="pipeline-small-label" x="${p.x}" y="${top + 40 + index * 16}" text-anchor="middle">${esc(line)}</text>`));
+      parts.push(`<g class="pipeline-node" data-step="${node.step_number}">
+        <rect class="pipeline-step-box" x="${p.x - boxWidth / 2}" y="${top}" width="${boxWidth}" height="${meta.height}" rx="6"></rect>
+        ${labels.join("")}<title>${esc(node.label)}</title></g>`);
+    } else if (node.type === "input") {
+      parts.push(`<g class="pipeline-node"><circle class="pipeline-input-dot" cx="${p.x}" cy="${p.y}" r="9"></circle>
+        <text class="pipeline-small-label" x="${p.x - 14}" y="${p.y + 4}" text-anchor="end">${esc(truncate(node.label, 26))}</text>
+        <title>${esc(node.label)}</title></g>`);
+    } else if (node.type === "figure") {
+      parts.push(`<g class="pipeline-node" data-figure="${esc(node.path)}">
+        <circle class="pipeline-figure-dot" cx="${p.x}" cy="${p.y}" r="11"></circle>
+        <text class="pipeline-small-label" x="${p.x + 16}" y="${p.y + 4}">${esc(truncate(node.label, 16))}</text>
+        <title>${esc(node.label)} — click to open</title></g>`);
+    }
   });
-  container.innerHTML =
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${maxX}" height="${maxY}">${parts.join("")}</svg>`;
+  graphElement.innerHTML =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">${parts.join("")}</svg>`;
+  const stepNodes = graph.nodes.filter(node => node.type === "step")
+    .sort((a, b) => (a.step_number ?? 0) - (b.step_number ?? 0));
+  stepNodes.forEach((node, index) => {
+    if (index < stepBlocks.length) stepBlocks[index].dataset.step = node.step_number;
+  });
+  document.querySelectorAll("#pipelineGraph g[data-step]").forEach(g =>
+    g.addEventListener("click", () => selectStep(g.dataset.step, true)));
+  document.querySelectorAll("#pipelineGraph g[data-dataset]").forEach(g =>
+    g.addEventListener("click", () => switchView("umap:" + g.dataset.dataset)));
+  document.querySelectorAll("#pipelineGraph g[data-figure]").forEach(g =>
+    g.addEventListener("click", () => switchView("figure:" + g.dataset.figure)));
+  stepBlocks.forEach(block => block.addEventListener("click", () => {
+    if (block.dataset.step !== undefined) selectStep(block.dataset.step, false);
+  }));
 }
-if (HAS_PIPELINE) renderPipeline();
 
-// --- UMAP viewer ---
-const PALETTE = ["#1f77b4","#ff7f0e","#2ca02c","#d62728","#9467bd","#8c564b","#e377c2",
-  "#7f7f7f","#bcbd22","#17becf","#aec7e8","#ffbb78","#98df8a","#ff9896","#c5b0d5",
-  "#c49c94","#f7b6d2","#c7c7c7","#dbdb8d","#9edae5"];
-const VIRIDIS = [[68,1,84],[59,82,139],[33,145,140],[94,201,98],[253,231,37]];
-const canvas = document.getElementById("umap-canvas");
-const ctx = canvas.getContext("2d");
-const umapState = { name: null, overview: null };
+// ---------- UMAP viewer ----------
+const PALETTE10 = ["#1f77b4","#ff7f0e","#2ca02c","#d62728","#9467bd","#8c564b","#e377c2","#7f7f7f","#bcbd22","#17becf"];
+const PALETTE20 = ["#1f77b4","#ff7f0e","#279e68","#d62728","#aa40fc","#8c564b","#e377c2","#b5bd61","#17becf","#aec7e8",
+                   "#ffbb78","#98df8a","#ff9896","#c5b0d5","#c49c94","#f7b6d2","#dbdb8d","#9edae5","#ad494a","#8c6d31"];
+const PALETTE28 = ["#023fa5","#7d87b9","#bec1d4","#d6bcc0","#bb7784","#8e063b","#4a6fe3","#8595e1","#b5bbe3","#e6afb9",
+                   "#e07b91","#d33f6a","#11c638","#8dd593","#c6dec7","#ead3c6","#f0b98d","#ef9708","#0fcfc0","#9cded6",
+                   "#d5eae7","#f3e1eb","#f6c4e1","#f79cd4","#7f7f7f","#c7c7c7","#1CE6FF","#336600"];
+const NA_COLOR = "#9aa4af";
+const VIRIDIS_STOPS = [[68,1,84],[70,50,126],[54,92,141],[39,127,142],[31,161,135],[74,193,109],[160,218,57],[253,231,37]];
+
+function paletteFor(count) {
+  if (count <= 10) return PALETTE10;
+  if (count <= 20) return PALETTE20;
+  if (count <= 28) return PALETTE28;
+  return null;
+}
 
 function viridis(t) {
-  const scaled = Math.max(0, Math.min(1, t)) * (VIRIDIS.length - 1);
+  const scaled = Math.max(0, Math.min(1, t)) * (VIRIDIS_STOPS.length - 1);
   const low = Math.floor(scaled), frac = scaled - low;
-  const a = VIRIDIS[low], b = VIRIDIS[Math.min(low + 1, VIRIDIS.length - 1)];
+  const a = VIRIDIS_STOPS[low], b = VIRIDIS_STOPS[Math.min(low + 1, VIRIDIS_STOPS.length - 1)];
   const mix = i => Math.round(a[i] + (b[i] - a[i]) * frac);
   return `rgb(${mix(0)},${mix(1)},${mix(2)})`;
 }
 
-function drawPoints(colorOf, order) {
-  const points = umapState.overview.umap;
-  const pad = 24, w = canvas.width, h = canvas.height;
-  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-  points.forEach(p => {
-    minX = Math.min(minX, p[0]); maxX = Math.max(maxX, p[0]);
-    minY = Math.min(minY, p[1]); maxY = Math.max(maxY, p[1]);
-  });
-  const scale = Math.min((w - 2 * pad) / (maxX - minX || 1), (h - 2 * pad) / (maxY - minY || 1));
-  ctx.clearRect(0, 0, w, h);
-  (order || points.map((_, i) => i)).forEach(i => {
-    const p = points[i];
-    ctx.fillStyle = colorOf(i);
-    ctx.beginPath();
-    ctx.arc(pad + (p[0] - minX) * scale, h - pad - (p[1] - minY) * scale, 3, 0, 6.2832);
-    ctx.fill();
-  });
-}
-
-function drawCategorical(values, label) {
-  const categories = [...new Set(values)];
-  const colorMap = {}, counts = {};
-  categories.forEach((c, i) => { colorMap[c] = PALETTE[i % PALETTE.length]; counts[c] = 0; });
-  values.forEach(v => counts[v]++);
-  drawPoints(i => colorMap[values[i]]);
-  document.getElementById("umap-legend").innerHTML = `<strong>${esc(label)}</strong><br>` +
-    categories.map(c =>
-      `<div><span class="swatch" style="background:${colorMap[c]}"></span>${esc(c)} (${counts[c]})</div>`
-    ).join("");
-}
-
-function drawNumeric(values, label) {
-  const finite = values.filter(v => Number.isFinite(v));
-  const min = Math.min(...finite), max = Math.max(...finite);
-  const span = max - min || 1;
-  const order = values.map((_, i) => i).sort((a, b) => values[a] - values[b]);
-  drawPoints(i => Number.isFinite(values[i]) ? viridis((values[i] - min) / span) : "#d8d8d8", order);
-  const stops = [0, 0.25, 0.5, 0.75, 1].map(t => viridis(t)).join(",");
-  document.getElementById("umap-legend").innerHTML = `<strong>${esc(label)}</strong>
-    <div class="gradient" style="background:linear-gradient(90deg,${stops})"></div>
-    <div>${min.toFixed(2)} &ndash; ${max.toFixed(2)}</div>`;
-}
-
-function colorByColumn(name) {
-  const column = umapState.overview.obs_columns.find(c => c.name === name);
-  if (!column) return;
-  if (column.kind === "numeric") drawNumeric(column.values.map(Number), name);
-  else drawCategorical(column.values.map(v => v === null ? "NA" : String(v)), name);
-}
-
-async function colorByGene(query) {
-  const overview = umapState.overview;
-  const message = document.getElementById("gene-message");
-  const wanted = query.trim().toUpperCase();
-  if (!wanted) return;
-  let index = -1;
-  if (overview.gene_symbols)
-    index = overview.gene_symbols.findIndex(s => s.toUpperCase() === wanted);
-  if (index < 0) index = overview.var_names.findIndex(v => v.toUpperCase() === wanted);
-  if (index < 0) { message.textContent = `gene not found: ${query}`; return; }
-  const shard = overview.gene_shard[index];
-  if (shard < 0) { message.textContent = `${query} was not exported`; return; }
-  message.textContent = "";
-  const shardName = "shard_" + String(shard).padStart(3, "0") + ".json";
-  const data = await (await fetch(`umap/${umapState.name}/genes/${shardName}`)).json();
-  const entry = data[overview.var_names[index]] || [[], []];
-  const values = new Array(overview.umap.length).fill(0);
-  entry[0].forEach((cell, k) => values[cell] = entry[1][k]);
-  const label = (overview.gene_symbols && overview.gene_symbols[index]) || overview.var_names[index];
-  drawNumeric(values, label);
-}
-
-function renderMarkers(findallmarkers) {
-  const element = document.getElementById("markers");
-  if (!findallmarkers || !findallmarkers.rows || !findallmarkers.rows.length) {
-    element.innerHTML = "";
-    return;
-  }
-  const clusters = [...new Set(findallmarkers.rows.map(r => r.cluster))];
-  element.innerHTML = `<h3>Marker genes (${esc(findallmarkers.cluster_col || "cluster")})</h3>
-    <label>cluster <select id="marker-cluster">${clusters.map(c =>
-      `<option>${esc(c)}</option>`).join("")}</select></label>
-    <div id="marker-table"></div>`;
-  const renderTable = cluster => {
-    const rows = findallmarkers.rows.filter(r => r.cluster === cluster)
-      .sort((a, b) => (b.avg_log2FC ?? 0) - (a.avg_log2FC ?? 0)).slice(0, 20);
-    document.getElementById("marker-table").innerHTML =
-      `<table><tr><th>gene</th><th>avg_log2FC</th><th>p_val_adj</th><th>pct.1</th><th>pct.2</th></tr>` +
-      rows.map(r => `<tr><td><a data-gene="${esc(r.gene)}">${esc(r.gene)}</a></td>
-        <td>${(r.avg_log2FC ?? NaN).toFixed(2)}</td>
-        <td>${r.p_val_adj != null ? r.p_val_adj.toExponential(1) : ""}</td>
-        <td>${r["pct.1"] != null ? r["pct.1"].toFixed(2) : ""}</td>
-        <td>${r["pct.2"] != null ? r["pct.2"].toFixed(2) : ""}</td></tr>`).join("") + "</table>";
-    document.querySelectorAll("#marker-table a").forEach(a =>
-      a.addEventListener("click", () => {
-        document.getElementById("gene-input").value = a.dataset.gene;
-        colorByGene(a.dataset.gene);
-      }));
-  };
-  const select = document.getElementById("marker-cluster");
-  select.addEventListener("change", () => renderTable(select.value));
-  renderTable(clusters[0]);
-}
+const umapState = { name: null, overview: null, positions: [], colorKey: null, genes: [], geneValues: {}, selectedGroup: null };
 
 async function loadDataset(name) {
-  const overview = await (await fetch(`umap/${name}/overview.json`)).json();
-  umapState.name = name;
-  umapState.overview = overview;
-  const select = document.getElementById("color-select");
-  select.innerHTML = overview.obs_columns.map(c =>
-    `<option>${esc(c.name)}</option>`).join("");
-  const preferred = overview.obs_columns.find(c => /leiden|cluster|state|cell_type/i.test(c.name));
-  if (preferred) select.value = preferred.name;
-  const fullCells = overview.cache && overview.cache.n_obs_full || overview.n_obs;
-  document.getElementById("dataset-info").textContent =
-    `${overview.n_obs} of ${fullCells} cells shown (fixed-seed subsample) \u00b7 ${overview.n_vars} genes`;
-  if (select.value) colorByColumn(select.value);
-  renderMarkers(overview.findallmarkers);
+  if (umapState.name !== name) {
+    const overview = await (await fetch(`umap/${name}/overview.json`)).json();
+    umapState.name = name;
+    umapState.overview = overview;
+    umapState.genes = [];
+    umapState.geneValues = {};
+    umapState.selectedGroup = null;
+    const points = overview.umap, pad = 16, W = 460, H = 345;
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    points.forEach(p => {
+      minX = Math.min(minX, p[0]); maxX = Math.max(maxX, p[0]);
+      minY = Math.min(minY, p[1]); maxY = Math.max(maxY, p[1]);
+    });
+    const scale = Math.min((W - 2 * pad) / (maxX - minX || 1), (H - 2 * pad) / (maxY - minY || 1));
+    umapState.positions = points.map(p => [pad + (p[0] - minX) * scale, H - pad - (p[1] - minY) * scale]);
+    const preferred = overview.obs_columns.find(c => /leiden|cluster|state|cell_type/i.test(c.name))
+      || overview.obs_columns.find(c => c.kind === "categorical") || overview.obs_columns[0];
+    umapState.colorKey = preferred ? "obs:" + preferred.name : null;
+    const fullCells = (overview.cache && overview.cache.n_obs_full) || overview.n_obs;
+    document.getElementById("datasetInfo").innerHTML =
+      `<b>${overview.n_obs}</b> of ${fullCells} cells (fixed-seed freezeframe) &middot; ${overview.n_vars} genes &middot; layer ${esc((overview.cache && overview.cache.primary_layer) || "X")}`;
+    const cacheMeta = overview.cache || {};
+    const layers = [].concat(cacheMeta.layers_full || []).join(", ");
+    document.getElementById("h5adHeadline").innerHTML =
+      `<span class="h5ad-headline-size">${overview.n_obs} &times; ${overview.n_vars}</span>` +
+      `<span>freezeframe of ${cacheMeta.n_obs_full ?? overview.n_obs} cells &times; ${cacheMeta.n_vars_full ?? overview.n_vars} genes</span>` +
+      (layers ? `<span>layers: ${esc(layers)}</span>` : "") +
+      `<span>primary layer: ${esc(cacheMeta.primary_layer || "X")}</span>`;
+    document.getElementById("obsTable").innerHTML =
+      "<tr><th>column</th><th>kind</th><th>detail</th></tr>" +
+      overview.obs_columns.map(column => {
+        const detail = column.kind === "categorical"
+          ? `${(column.categories || []).length} groups: ${(column.categories || []).slice(0, 6).join(", ")}${(column.categories || []).length > 6 ? ", …" : ""}`
+          : column.kind;
+        return `<tr><td>${esc(column.name)}</td><td>${esc(column.kind)}</td><td>${esc(detail)}</td></tr>`;
+      }).join("");
+    renderPanelRows();
+    renderChips();
+  }
+  drawUmap();
+  renderMarkerPanel();
 }
 
-if (DATASETS.length) {
-  const datasetSelect = document.getElementById("dataset-select");
-  datasetSelect.innerHTML = DATASETS.map(d =>
-    `<option value="${esc(d.name)}">${esc(d.label)}</option>`).join("");
-  datasetSelect.addEventListener("change", () => loadDataset(datasetSelect.value));
-  document.getElementById("color-select").addEventListener("change",
-    event => colorByColumn(event.target.value));
-  document.getElementById("gene-button").addEventListener("click",
-    () => colorByGene(document.getElementById("gene-input").value));
-  document.getElementById("gene-input").addEventListener("keydown", event => {
-    if (event.key === "Enter") colorByGene(event.target.value);
-  });
-  loadDataset(DATASETS[0].name);
+function currentValues() {
+  const key = umapState.colorKey, overview = umapState.overview;
+  if (!key || !overview) return null;
+  if (key.startsWith("obs:")) {
+    const column = overview.obs_columns.find(c => c.name === key.slice(4));
+    if (!column) return null;
+    if (column.kind === "numeric") return { kind: "numeric", label: column.name, values: column.values };
+    return { kind: "categorical", label: column.name, values: column.values.map(v => v == null ? "NA" : String(v)) };
+  }
+  const gene = key.slice(5);
+  return { kind: "numeric", label: gene, values: umapState.geneValues[gene] || [] };
 }
+
+function drawUmap() {
+  const svg = document.getElementById("umapSvg");
+  const info = currentValues();
+  let colorOf = () => NA_COLOR;
+  let order = umapState.positions.map((_, i) => i);
+  if (info && info.kind === "numeric") {
+    const numbers = info.values.map(Number);
+    const finite = numbers.filter(Number.isFinite);
+    const min = finite.length ? Math.min(...finite) : 0;
+    const max = finite.length ? Math.max(...finite) : 1;
+    const span = max - min || 1;
+    colorOf = i => Number.isFinite(numbers[i]) ? viridis((numbers[i] - min) / span) : NA_COLOR;
+    order = order.slice().sort((a, b) => (numbers[a] || 0) - (numbers[b] || 0));
+    renderLegendNumeric(info.label, min, max);
+  } else if (info) {
+    const categories = [...new Set(info.values)];
+    const palette = paletteFor(categories.length);
+    const colorMap = {};
+    categories.forEach((category, index) => {
+      colorMap[category] = category === "NA" ? NA_COLOR : (palette ? palette[index % palette.length] : NA_COLOR);
+    });
+    colorOf = i => colorMap[info.values[i]];
+    renderLegendCategorical(info.label, categories, colorMap, info.values);
+  }
+  const selected = umapState.selectedGroup;
+  svg.innerHTML = order.map(i => {
+    const p = umapState.positions[i];
+    const dim = selected != null && info && info.kind === "categorical" && info.values[i] !== selected;
+    return `<circle class="h5ad-umap-point" data-i="${i}" cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.2" fill="${colorOf(i)}" fill-opacity="${dim ? 0.12 : 0.75}"></circle>`;
+  }).join("");
+}
+
+function renderLegendCategorical(label, categories, colorMap, values) {
+  const counts = {};
+  values.forEach(v => { counts[v] = (counts[v] || 0) + 1; });
+  const legend = document.getElementById("umapLegend");
+  legend.innerHTML = `<div class="h5ad-legend-title">${esc(label)}</div>` + categories.map(category =>
+    `<div class="h5ad-legend-item ${umapState.selectedGroup === category ? "is-active" : ""}" data-cat="${esc(category)}" title="${counts[category]} cells">
+       <span class="h5ad-legend-swatch" style="background:${colorMap[category]}"></span><span>${esc(truncate(category, 20))}</span>
+     </div>`).join("");
+  legend.querySelectorAll(".h5ad-legend-item").forEach(item => item.addEventListener("click", () => {
+    umapState.selectedGroup = umapState.selectedGroup === item.dataset.cat ? null : item.dataset.cat;
+    drawUmap();
+    renderMarkerPanel();
+  }));
+}
+
+function renderLegendNumeric(label, min, max) {
+  const stops = [];
+  for (let i = 0; i <= 10; i++) stops.push(viridis(i / 10));
+  document.getElementById("umapLegend").innerHTML = `<div class="h5ad-legend-title">${esc(label)}</div>
+    <div style="display:flex;gap:6px;min-height:96px">
+      <span class="h5ad-legend-bar" style="background:linear-gradient(to top, ${stops.join(",")})"></span>
+      <span class="h5ad-legend-scale"><span>${max.toFixed(2)}</span><span>${((min + max) / 2).toFixed(2)}</span><span>${min.toFixed(2)}</span></span>
+    </div>`;
+}
+
+function renderPanelRows() {
+  const overview = umapState.overview;
+  const rows = [];
+  const panelRow = (key, name, summary, removable) => {
+    const active = umapState.colorKey === key;
+    return `<div class="h5ad-panel-row ${active ? "is-color-by" : ""}">
+      <span class="h5ad-row-colorby"><input type="radio" name="colorby" value="${esc(key)}" ${active ? "checked" : ""}></span>
+      <span class="h5ad-row-name" title="${esc(name)}">${esc(name)}</span>
+      ${removable ? `<button class="h5ad-row-trash" data-gene="${esc(name)}" title="remove">&#10005;</button>` : "<span></span>"}
+      <span class="h5ad-row-value">${esc(summary)}</span></div>`;
+  };
+  overview.obs_columns.forEach(column => {
+    const summary = column.kind === "categorical"
+      ? `categorical &middot; ${(column.categories || []).length} groups`.replace("&middot;", "·")
+      : column.kind;
+    rows.push(panelRow("obs:" + column.name, column.name, summary, false));
+  });
+  umapState.genes.forEach(gene => rows.push(panelRow("gene:" + gene, gene, "gene expression", true)));
+  const element = document.getElementById("panelRows");
+  element.innerHTML = rows.join("");
+  element.querySelectorAll('input[type="radio"]').forEach(radio =>
+    radio.addEventListener("change", () => setColorKey(radio.value)));
+  element.querySelectorAll(".h5ad-row-trash").forEach(trash =>
+    trash.addEventListener("click", () => removeGene(trash.dataset.gene)));
+}
+
+async function setColorKey(key) {
+  if (key.startsWith("gene:")) {
+    try { await ensureGeneValues(key.slice(5)); }
+    catch (error) { showGeneMessage(error.message); return; }
+  }
+  if (umapState.colorKey !== key) umapState.selectedGroup = null;
+  umapState.colorKey = key;
+  renderPanelRows();
+  drawUmap();
+  renderMarkerPanel();
+}
+
+// ---------- genes ----------
+function showGeneMessage(message) { document.getElementById("geneMessage").textContent = message || ""; }
+
+function resolveGene(query) {
+  const overview = umapState.overview, wanted = query.trim().toUpperCase();
+  let index = -1;
+  if (overview.gene_symbols) index = overview.gene_symbols.findIndex(s => s && s.toUpperCase() === wanted);
+  if (index < 0) index = overview.var_names.findIndex(v => v.toUpperCase() === wanted);
+  if (index < 0) return null;
+  return { index, name: (overview.gene_symbols && overview.gene_symbols[index]) || overview.var_names[index] };
+}
+
+async function ensureGeneValues(query) {
+  const hit = resolveGene(query);
+  if (!hit) throw new Error("gene not found: " + query);
+  if (umapState.geneValues[hit.name]) return hit.name;
+  const shard = umapState.overview.gene_shard[hit.index];
+  if (shard == null || shard < 0) throw new Error("not exported: " + query);
+  const shardName = "shard_" + String(shard).padStart(3, "0") + ".json";
+  const data = await (await fetch(`umap/${umapState.name}/genes/${shardName}`)).json();
+  const entry = data[umapState.overview.var_names[hit.index]] || [[], []];
+  const values = new Array(umapState.overview.umap.length).fill(0);
+  entry[0].forEach((cell, k) => { values[cell] = entry[1][k]; });
+  umapState.geneValues[hit.name] = values;
+  return hit.name;
+}
+
+async function addGene(query) {
+  let name;
+  try { name = await ensureGeneValues(query); }
+  catch (error) { showGeneMessage(error.message); return; }
+  showGeneMessage("");
+  if (!umapState.genes.includes(name)) umapState.genes.push(name);
+  renderChips();
+  await setColorKey("gene:" + name);
+}
+
+function removeGene(name) {
+  umapState.genes = umapState.genes.filter(gene => gene !== name);
+  if (umapState.colorKey === "gene:" + name) {
+    const preferred = umapState.overview.obs_columns.find(c => c.kind === "categorical") || umapState.overview.obs_columns[0];
+    umapState.colorKey = preferred ? "obs:" + preferred.name : null;
+  }
+  renderChips();
+  renderPanelRows();
+  drawUmap();
+  renderMarkerPanel();
+}
+
+function renderChips() {
+  document.getElementById("geneChips").innerHTML = umapState.genes.map(gene =>
+    `<span class="h5ad-gene-chip">${esc(gene)}<button class="h5ad-gene-chip-remove" data-gene="${esc(gene)}">&#10005;</button></span>`).join("");
+  document.querySelectorAll("#geneChips .h5ad-gene-chip-remove").forEach(remove =>
+    remove.addEventListener("click", () => removeGene(remove.dataset.gene)));
+}
+
+function geneCandidates(query) {
+  const overview = umapState.overview, wanted = query.trim().toUpperCase();
+  if (!wanted || !overview) return [];
+  const source = (overview.gene_symbols && overview.gene_symbols.some(s => s)) ? overview.gene_symbols : overview.var_names;
+  const starts = [], contains = [];
+  for (let i = 0; i < source.length && starts.length < 20; i++) {
+    const symbol = source[i];
+    if (!symbol) continue;
+    const upper = symbol.toUpperCase();
+    if (upper.startsWith(wanted)) starts.push(symbol);
+    else if (contains.length < 20 && upper.includes(wanted)) contains.push(symbol);
+  }
+  return [...new Set([...starts, ...contains])].slice(0, 20);
+}
+
+function setupGeneInput() {
+  const input = document.getElementById("geneInput");
+  const dropdown = document.getElementById("geneDropdown");
+  const commit = value => {
+    value.split(/[,;]/).map(part => part.trim()).filter(Boolean).forEach(part => addGene(part));
+    input.value = "";
+    dropdown.hidden = true;
+  };
+  input.addEventListener("input", () => {
+    const candidates = geneCandidates(input.value);
+    if (!candidates.length) { dropdown.hidden = true; return; }
+    dropdown.innerHTML = candidates.map(c => `<div class="h5ad-dropdown-item">${esc(c)}</div>`).join("");
+    dropdown.hidden = false;
+    dropdown.querySelectorAll(".h5ad-dropdown-item").forEach(item =>
+      item.addEventListener("mousedown", () => commit(item.textContent)));
+  });
+  input.addEventListener("keydown", event => { if (event.key === "Enter") commit(input.value); });
+  input.addEventListener("blur", () => setTimeout(() => { dropdown.hidden = true; }, 150));
+}
+
+// ---------- markers ----------
+function renderMarkerPanel() {
+  const element = document.getElementById("markerPanel");
+  const overview = umapState.overview;
+  const markers = overview && overview.findallmarkers;
+  if (!markers || !markers.rows || !markers.rows.length) { element.innerHTML = ""; return; }
+  const info = currentValues();
+  const isClusterColumn = info && info.kind === "categorical" && markers.cluster_col && info.label === markers.cluster_col;
+  let body;
+  if (!isClusterColumn) {
+    body = `<div class="hint">Color by <b>${esc(markers.cluster_col || "the cluster column")}</b> and click a legend group to see its markers.</div>`;
+  } else if (umapState.selectedGroup == null) {
+    body = '<div class="hint">Click a legend group to see its top markers.</div>';
+  } else {
+    const rows = markers.rows.filter(row => String(row.cluster) === String(umapState.selectedGroup))
+      .sort((a, b) => (b.avg_log2FC ?? 0) - (a.avg_log2FC ?? 0)).slice(0, 8);
+    const maxLfc = Math.max(...rows.map(row => row.avg_log2FC ?? 0), 0.001);
+    body = '<div class="h5ad-marker-list">' + rows.map(row => {
+      const pct = Math.round(100 * (row["pct.1"] ?? 0));
+      const lfcWidth = Math.round(100 * Math.max(0, row.avg_log2FC ?? 0) / maxLfc);
+      return `<div class="h5ad-marker-row">
+        <div class="h5ad-marker-gene" data-gene="${esc(row.gene)}">${esc(row.gene)}</div>
+        <div class="h5ad-marker-meter"><span class="h5ad-marker-meter-label">in group</span>
+          <span class="h5ad-marker-meter-track"><span class="h5ad-marker-meter-fill" style="width:${pct}%"></span></span>
+          <span class="h5ad-marker-meter-value">${pct}%</span></div>
+        <div class="h5ad-marker-meter"><span class="h5ad-marker-meter-label">log2FC</span>
+          <span class="h5ad-marker-meter-track"><span class="h5ad-marker-meter-fill" style="width:${lfcWidth}%"></span></span>
+          <span class="h5ad-marker-meter-value">${(row.avg_log2FC ?? 0).toFixed(2)}</span></div>
+      </div>`;
+    }).join("") + "</div>";
+  }
+  const suffix = umapState.selectedGroup != null ? " — " + esc(String(umapState.selectedGroup)) : "";
+  element.innerHTML = `<div class="h5ad-marker-panel-title">FindAllMarkers${suffix}</div>` + body;
+  element.querySelectorAll(".h5ad-marker-gene").forEach(gene =>
+    gene.addEventListener("click", () => addGene(gene.dataset.gene)));
+}
+
+// ---------- tooltip ----------
+function setupTooltip() {
+  const canvas = document.querySelector(".h5ad-umap-canvas");
+  const tooltip = document.getElementById("umapTooltip");
+  canvas.addEventListener("mousemove", event => {
+    const target = event.target;
+    if (!target.classList || !target.classList.contains("h5ad-umap-point")) { tooltip.hidden = true; return; }
+    const info = currentValues();
+    if (!info) { tooltip.hidden = true; return; }
+    const index = Number(target.dataset.i);
+    const value = info.values[index];
+    tooltip.textContent = `${info.label}: ${info.kind === "numeric" ? Number(value).toFixed(2) : value}`;
+    const canvasRect = canvas.getBoundingClientRect();
+    const pointRect = target.getBoundingClientRect();
+    tooltip.style.left = (pointRect.left + pointRect.width / 2 - canvasRect.left) + "px";
+    tooltip.style.top = (pointRect.top - canvasRect.top) + "px";
+    tooltip.hidden = false;
+  });
+  canvas.addEventListener("mouseleave", () => { tooltip.hidden = true; });
+}
+
+// ---------- init ----------
+renderReportList();
+renderViewList();
+setupGeneInput();
+setupTooltip();
+const stepBlocks = wrapStepBlocks();
+renderPipeline(stepBlocks);
 </script>
 </body>
 </html>
