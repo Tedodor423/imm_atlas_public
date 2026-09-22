@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>bioreport</title>
+<style>
+
+:root { --ink: #1c2733; --muted: #67788a; --line: #dde4ea; --accent: #2563ab; --bg: #f6f8fa; }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+       color: var(--ink); background: var(--bg); }
+header { background: #fff; border-bottom: 1px solid var(--line); padding: 18px 28px 0; }
+header h1 { margin: 4px 0 2px; font-size: 1.35rem; }
+header .meta { color: var(--muted); font-size: 0.85rem; margin-bottom: 12px; }
+header .meta a.pdf { margin-left: 10px; color: var(--accent); }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+main { max-width: 1080px; margin: 0 auto; padding: 20px 28px 60px; }
+
+.report-card { display: block; background: #fff; border: 1px solid var(--line); border-radius: 8px;
+               padding: 14px 18px; margin-bottom: 12px; color: inherit; }
+.report-card:hover { border-color: var(--accent); text-decoration: none; }
+.report-card h2 { margin: 0 0 4px; font-size: 1.05rem; color: var(--accent); }
+.report-card .meta { color: var(--muted); font-size: 0.82rem; }
+</style>
+</head>
+<body>
+<header><h1>bioreport</h1><div class="meta">exported reports</div></header>
+<main id="reports"></main>
+<script>
+const REPORTS = [{"slug": "cd8_atlas", "title": "cd8_atlas", "timestamp": "2026-09-21 14:31:01", "n_figures": 75, "n_datasets": 10, "pdf_url": null}];
+const esc = t => String(t).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+document.getElementById("reports").innerHTML = REPORTS.map(r =>
+  `<a class="report-card" href="reports/${encodeURIComponent(r.slug)}/">
+     <h2>${esc(r.title)}</h2>
+     <div class="meta">${esc(r.timestamp)} &middot; ${r.n_figures} figures &middot; ${r.n_datasets} UMAP dataset(s)</div>
+   </a>`).join("") || "<p>No reports exported yet.</p>";
+</script>
+</body>
+</html>
