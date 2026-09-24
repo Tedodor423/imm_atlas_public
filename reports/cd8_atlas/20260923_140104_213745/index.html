@@ -321,7 +321,7 @@ aside { background: var(--sidebar-bg); display: grid; grid-template-rows: auto a
     </div>
     <div class="viewer-body">
       <div id="view-report" class="markdown-body"><hr>
-<h2>Table of Contents</h2>
+<h2 id="table-of-contents">Table of Contents</h2>
 <!-- bioreport-toc-start -->
 <ul>
 <li><a href="#1-loading-datasets">1. Loading datasets</a><ul>
@@ -413,8 +413,8 @@ aside { background: var(--sidebar-bg); display: grid; grid-template-rows: auto a
 <!-- bioreport-toc-end -->
 
 <hr>
-<h1>1. Loading datasets</h1>
-<h4>load_dataset</h4>
+<h1 id="1-loading-datasets">1. Loading datasets</h1>
+<h4 id="load_dataset">load_dataset</h4>
 <p>function: load_dataset
 parameters:
   filename: GSE205589.raw_counts_stand.h5ad
@@ -425,14 +425,14 @@ cache_file: data/load_dataset_0cbd0fda4832.h5ad</p>
 <h4>load file 1: <code>GSE205589.raw_counts_stand.h5ad</code></h4>
 <pre><code>file_version: 2026-09-21 14:19:38.416365922
 </code></pre>
-<h4>remap_columns</h4>
+<h4 id="remap_columns">remap_columns</h4>
 <p>function: remap_columns
 parameters:
   column_map: {"Age": "age", "Chemistry": "chemistry", "Disease": "disease", "Donor": "donor", "Patient": "donor", "PatientID": "donor", "Sample": "sample_id", "SampleID": "sample_id", "Sex": "sex", "Tissue": "tissue_type", "assay": "chemistry", "cohort": "study", "condition": "disease", "condition_detail": "disease_detail", "dataset": "study", "detailed_context": "disease_detail", "diagnosis": "disease", "diagnosis_detail": "disease_detail", "disease_status": "disease", "disease_subtype": "disease_detail", "donor_id": "donor", "gender": "sex", "library_type": "chemistry", "organ": "tissue_type", "patient": "donor", "patient_id": "donor", "protocol": "chemistry", "sample": "sample_id", "sampleID": "sample_id", "sample_type": "tissue_type", "source_tissue": "tissue_type", "subtype": "disease_detail", "tissue": "tissue_type"}
   defaults: {"chemistry": "10x_5v2"}
 cache_file: data/remap_columns_8ab5b300610c.h5ad</p>
 <p>Remapped columns: tissue → tissue_type</p>
-<h4>qc_full</h4>
+<h4 id="qc_full">qc_full</h4>
 <p>function: qc_full
 parameters:
   excluded_gene_patterns: null
@@ -444,7 +444,7 @@ parameters:
   mitochondria_cutoff_percentage: 8
   name: Ali2023_BC_OC
 cache_file: data/qc_full_f4a7644c36d5.h5ad</p>
-<h4>load_dataset</h4>
+<h4 id="load_dataset-1">load_dataset</h4>
 <p>function: load_dataset
 parameters:
   filename: GSE185344.raw_counts_stand.h5ad
@@ -455,14 +455,14 @@ cache_file: data/load_dataset_87df9f6f6049.h5ad</p>
 <h4>load file 2: <code>GSE185344.raw_counts_stand.h5ad</code></h4>
 <pre><code>file_version: 2026-09-09 09:26:05.966599429
 </code></pre>
-<h4>remap_columns</h4>
+<h4 id="remap_columns-1">remap_columns</h4>
 <p>function: remap_columns
 parameters:
   column_map: {"Age": "age", "Chemistry": "chemistry", "Disease": "disease", "Donor": "donor", "Patient": "donor", "PatientID": "donor", "Sample": "sample_id", "SampleID": "sample_id", "Sex": "sex", "Tissue": "tissue_type", "assay": "chemistry", "cohort": "study", "condition": "disease", "condition_detail": "disease_detail", "dataset": "study", "detailed_context": "disease_detail", "diagnosis": "disease", "diagnosis_detail": "disease_detail", "disease_status": "disease", "disease_subtype": "disease_detail", "donor_id": "donor", "gender": "sex", "library_type": "chemistry", "organ": "tissue_type", "patient": "donor", "patient_id": "donor", "protocol": "chemistry", "sample": "sample_id", "sampleID": "sample_id", "sample_type": "tissue_type", "source_tissue": "tissue_type", "subtype": "disease_detail", "tissue": "tissue_type"}
   defaults: {"chemistry": "10x_5v1", "disease": "PrC", "disease_detail": "Prostate cancer (ICC/IDC)"}
 cache_file: data/remap_columns_b7ada7a031bc.h5ad</p>
 <p>Remapped columns: tissue → tissue_type</p>
-<h4>qc_full</h4>
+<h4 id="qc_full-1">qc_full</h4>
 <p>function: qc_full
 parameters:
   excluded_gene_patterns: null
@@ -474,7 +474,7 @@ parameters:
   mitochondria_cutoff_percentage: 8
   name: Wong2022_PrC_prostate
 cache_file: data/qc_full_0c0867d93e50.h5ad</p>
-<h4>load_dataset</h4>
+<h4 id="load_dataset-2">load_dataset</h4>
 <p>function: load_dataset
 parameters:
   filename: GSE165045.raw_counts_stand.h5ad
@@ -485,14 +485,14 @@ cache_file: data/load_dataset_08012f63823c.h5ad</p>
 <h4>load file 3: <code>GSE165045.raw_counts_stand.h5ad</code></h4>
 <pre><code>file_version: 2026-09-21 14:17:52.508620201
 </code></pre>
-<h4>remap_columns</h4>
+<h4 id="remap_columns-2">remap_columns</h4>
 <p>function: remap_columns
 parameters:
   column_map: {"Age": "age", "Chemistry": "chemistry", "Disease": "disease", "Donor": "donor", "Patient": "donor", "PatientID": "donor", "Sample": "sample_id", "SampleID": "sample_id", "Sex": "sex", "Tissue": "tissue_type", "assay": "chemistry", "cohort": "study", "condition": "disease", "condition_detail": "disease_detail", "dataset": "study", "detailed_context": "disease_detail", "diagnosis": "disease", "diagnosis_detail": "disease_detail", "disease_status": "disease", "disease_subtype": "disease_detail", "donor_id": "donor", "gender": "sex", "library_type": "chemistry", "organ": "tissue_type", "patient": "donor", "patient_id": "donor", "protocol": "chemistry", "sample": "sample_id", "sampleID": "sample_id", "sample_type": "tissue_type", "source_tissue": "tissue_type", "subtype": "disease_detail", "tissue": "tissue_type"}
   defaults: {"chemistry": "10x_3v3"}
 cache_file: data/remap_columns_2dda6607a929.h5ad</p>
 <p>Remapped columns: tissue → tissue_type</p>
-<h4>qc_full</h4>
+<h4 id="qc_full-2">qc_full</h4>
 <p>function: qc_full
 parameters:
   excluded_gene_patterns: null
@@ -504,7 +504,7 @@ parameters:
   mitochondria_cutoff_percentage: 8
   name: Lee2022_pancreas
 cache_file: data/qc_full_2e60a0970a02.h5ad</p>
-<h4>load_dataset</h4>
+<h4 id="load_dataset-3">load_dataset</h4>
 <p>function: load_dataset
 parameters:
   filename: GSE212217.raw_counts_stand.h5ad
@@ -515,14 +515,14 @@ cache_file: data/load_dataset_f1c9eec22d9e.h5ad</p>
 <h4>load file 4: <code>GSE212217.raw_counts_stand.h5ad</code></h4>
 <pre><code>file_version: 2026-09-09 09:27:43.840832498
 </code></pre>
-<h4>remap_columns</h4>
+<h4 id="remap_columns-3">remap_columns</h4>
 <p>function: remap_columns
 parameters:
   column_map: {"Age": "age", "Chemistry": "chemistry", "Disease": "disease", "Donor": "donor", "Patient": "donor", "PatientID": "donor", "Sample": "sample_id", "SampleID": "sample_id", "Sex": "sex", "Tissue": "tissue_type", "assay": "chemistry", "cohort": "study", "condition": "disease", "condition_detail": "disease_detail", "dataset": "study", "detailed_context": "disease_detail", "diagnosis": "disease", "diagnosis_detail": "disease_detail", "disease_status": "disease", "disease_subtype": "disease_detail", "donor_id": "donor", "gender": "sex", "library_type": "chemistry", "organ": "tissue_type", "patient": "donor", "patient_id": "donor", "protocol": "chemistry", "sample": "sample_id", "sampleID": "sample_id", "sample_type": "tissue_type", "source_tissue": "tissue_type", "subtype": "disease_detail", "tissue": "tissue_type"}
   defaults: {"chemistry": "10x_5v1", "disease": "EC", "disease_detail": "Endometrial carcinoma (MMRd)"}
 cache_file: data/remap_columns_3b5bb47bc4cd.h5ad</p>
 <p>remap_columns: no renames applied (targets already present or sources absent)</p>
-<h4>qc_full</h4>
+<h4 id="qc_full-3">qc_full</h4>
 <p>function: qc_full
 parameters:
   excluded_gene_patterns: null
@@ -534,7 +534,7 @@ parameters:
   mitochondria_cutoff_percentage: 8
   name: Chow2023_EC_PBMC
 cache_file: data/qc_full_6350a939e5d0.h5ad</p>
-<h4>load_dataset</h4>
+<h4 id="load_dataset-4">load_dataset</h4>
 <p>function: load_dataset
 parameters:
   filename: GSE121636.raw_counts_stand.h5ad
@@ -545,14 +545,14 @@ cache_file: data/load_dataset_78d05651492b.h5ad</p>
 <h4>load file 5: <code>GSE121636.raw_counts_stand.h5ad</code></h4>
 <pre><code>file_version: 2026-09-09 09:26:35.540482876
 </code></pre>
-<h4>remap_columns</h4>
+<h4 id="remap_columns-4">remap_columns</h4>
 <p>function: remap_columns
 parameters:
   column_map: {"Age": "age", "Chemistry": "chemistry", "Disease": "disease", "Donor": "donor", "Patient": "donor", "PatientID": "donor", "Sample": "sample_id", "SampleID": "sample_id", "Sex": "sex", "Tissue": "tissue_type", "assay": "chemistry", "cohort": "study", "condition": "disease", "condition_detail": "disease_detail", "dataset": "study", "detailed_context": "disease_detail", "diagnosis": "disease", "diagnosis_detail": "disease_detail", "disease_status": "disease", "disease_subtype": "disease_detail", "donor_id": "donor", "gender": "sex", "library_type": "chemistry", "organ": "tissue_type", "patient": "donor", "patient_id": "donor", "protocol": "chemistry", "sample": "sample_id", "sampleID": "sample_id", "sample_type": "tissue_type", "source_tissue": "tissue_type", "subtype": "disease_detail", "tissue": "tissue_type"}
   defaults: {"chemistry": "10x_5v2", "disease": "ccRCC", "disease_detail": "Clear cell renal carcinoma"}
 cache_file: data/remap_columns_ec86cfcb4e7c.h5ad</p>
 <p>Remapped columns: tissue → tissue_type</p>
-<h4>qc_full</h4>
+<h4 id="qc_full-4">qc_full</h4>
 <p>function: qc_full
 parameters:
   excluded_gene_patterns: null
@@ -565,9 +565,9 @@ parameters:
   name: Borcherding2021_ccRCC
 cache_file: data/qc_full_65aa4d64ac72.h5ad</p>
 <hr>
-<h1>2. Integration 'combined'</h1>
+<h1 id="2-integration-combined">2. Integration 'combined'</h1>
 <hr>
-<h2>2.1. Cohort overview</h2>
+<h2 id="21-cohort-overview">2.1. Cohort overview</h2>
 <p><a href="figures/cohort_overview_65aa4d64ac72.png"><img src="figures/cohort_overview_65aa4d64ac72.png" width="50%"></a></p>
 <table>
 <thead>
@@ -625,7 +625,7 @@ cache_file: data/qc_full_65aa4d64ac72.h5ad</p>
 </table>
 <p>Total: 133,841 cells · 5 datasets · 7 disease values</p>
 <hr>
-<h2>2.2. Dataset merge</h2>
+<h2 id="22-dataset-merge">2.2. Dataset merge</h2>
 <p>Ali2023_BC_OC: 16017 genes, 13711 ENSG-keyed (symbol_col=gene_name); sample ['AL627309.1', 'AL627309.5', 'ENSG00000237491']</p>
 <p>Wong2022_PrC_prostate: 20791 genes, 17040 ENSG-keyed (symbol_col=gene_name); sample ['AL627309.1', 'AL627309.5', 'ENSG00000228463']</p>
 <p>Lee2022_pancreas: 16790 genes, 14927 ENSG-keyed (symbol_col=gene_name); sample ['AL669831.5', 'ENSG00000177757', 'ENSG00000225880']</p>
@@ -645,19 +645,19 @@ cache_file: data/qc_full_65aa4d64ac72.h5ad</p>
 <p>study: {'Wong2022': 29180, 'Ali2023': 28180, 'GSE165045': 27125, 'Chow2023': 25032, 'Borcherding2021': 24324}</p>
 <p>source: {'Wong2022_PrC_prostate': 29180, 'Ali2023_BC_OC': 28180, 'Lee2022_pancreas': 27125, 'Chow2023_EC_PBMC': 25032, 'Borcherding2021_ccRCC': 24324}</p>
 <p>disease: {'PC': 29180, 'BC': 25472, 'EC': 25032, 'ccRCC': 24324, 'CP': 22996, 'H': 4129, 'OC': 2708}</p>
-<h4>normalise</h4>
+<h4 id="normalise">normalise</h4>
 <p>function: normalise
 parameters: {}
 cache_file: data/normalise_84cf10887def.h5ad</p>
 <hr>
-<h2>2.3. Normalisation</h2>
+<h2 id="23-normalisation">2.3. Normalisation</h2>
 <p>Normalised in reference to total counts</p>
 <p>Transformed with log1p</p>
 <p><a href="figures/normalisation_total_counts_hist_84cf10887def.png"><img src="figures/normalisation_total_counts_hist_84cf10887def.png" width="48%"></a>
 <a href="figures/normalisation_log1p_hist_84cf10887def.png"><img src="figures/normalisation_log1p_hist_84cf10887def.png" width="48%"></a></p>
 <hr>
-<h2>2.4. T cell selection (CD3+; all subtypes)</h2>
-<h4>score_and_select_t_cells</h4>
+<h2 id="24-t-cell-selection-cd3-all-subtypes">2.4. T cell selection (CD3+; all subtypes)</h2>
+<h4 id="score_and_select_t_cells">score_and_select_t_cells</h4>
 <p>function: score_and_select_t_cells
 parameters: {}
 cache_file: data/score_and_select_t_cells_9502d195de8e.h5ad</p>
@@ -671,21 +671,21 @@ cache_file: data/score_and_select_t_cells_9502d195de8e.h5ad</p>
 <p><a href="figures/t_cell_selection_scores_9502d195de8e.png"><img src="figures/t_cell_selection_scores_9502d195de8e.png" width="50%"></a></p>
 <p>T cell selection (CD3+): 133841 → 60498 cells</p>
 <hr>
-<h1>3. combined: CD8 lineage</h1>
-<h4>select_cd8_cells</h4>
+<h1 id="3-combined-cd8-lineage">3. combined: CD8 lineage</h1>
+<h4 id="select_cd8_cells">select_cd8_cells</h4>
 <p>function: select_cd8_cells
 parameters: {}
 cache_file: data/select_cd8_cells_73b83dd95e2f.h5ad</p>
 <p>CD8 subset: 25002 / 60498 cells (41.3%)</p>
 <p>tissue_type: {'PBMC': 13715, 'pancreas': 4250, 'prostate': 3885, 'kidney': 2795, 'breast': 340, 'ovary': 17}</p>
 <hr>
-<h1>4. COMBINED_CD8 lineage: full processing</h1>
-<h4>normalise</h4>
+<h1 id="4-combined_cd8-lineage-full-processing">4. COMBINED_CD8 lineage: full processing</h1>
+<h4 id="normalise-1">normalise</h4>
 <p>function: normalise
 parameters: {}
 cache_file: data/normalise_3d289fdf4bf6.h5ad</p>
 <hr>
-<h2>4.1. Normalisation</h2>
+<h2 id="41-normalisation">4.1. Normalisation</h2>
 <p>Normalised in reference to total counts</p>
 <p>Transformed with log1p</p>
 <p><a href="figures/normalisation_total_counts_hist_3d289fdf4bf6.png"><img src="figures/normalisation_total_counts_hist_3d289fdf4bf6.png" width="48%"></a>
@@ -693,7 +693,7 @@ cache_file: data/normalise_3d289fdf4bf6.h5ad</p>
 <h4>load file 8: <code>inhibitory_receptor_list_new.csv</code></h4>
 <pre><code>file_version: 2026-05-13 15:49:25.468477661
 </code></pre>
-<h4>feature_selection_full</h4>
+<h4 id="feature_selection_full">feature_selection_full</h4>
 <p>function: feature_selection_full
 parameters:
   batch_key: study
@@ -704,53 +704,53 @@ parameters:
   whitelist_genes: ["gene", "PDCD1", "BTLA", "CD200R1", "CTLA4", "LAG3", "TIGIT", "HAVCR2", "CLEC12A", "CLEC12B", "CLEC1A", "CLEC1B", "CLEC4A", "CLEC8A", "CLEC9A", "FCRL2", "FCRL3", "FCRL4", "FCRL5", "FCRL6", "FCGR2A", "FCGR2B", "FCGR2C", "KIR2DL1", "KIR2DL2", "KIR2DL3", "KIR2DL4", "KIR2DL5A", "KIR3DL1", "KIR3DL2", "KIR3DL3", "KLRB1", "KLRC1", "KLRF2", "KLRG1", "LILRB1", "LILRB2", "LILRB3", "LILRB4", "LILRB5", "CD72", "CD99L2", "CEACAM1", "MPIG6B", "LAIR1", "NCR2", "PECAM1", "PILRA", "SIRPA", "VSIR", "VSTM1", "VSTM4", "CD22", "CD33", "SIGLEC10", "SIGLEC11", "SIGLEC12", "SIGLEC5", "SIGLEC6", "SIGLEC7", "SIGLEC8", "SIGLEC9", "SLAMF1", "CD244", "LY9", "CD84", "SLAMF6", "SLAMF7", "CD5", "CD3D", "CD3E", "CD3G", "CD8A", "CD8B", "CD8B2", "CD4", "NCAM1", "NKG7", "GNLY", "KLRD1", "CD19", "MS4A1", "CD79A", "CD68", "CSF1R", "MRC1", "COL1A1", "COL1A2", "FAP"]
 cache_file: data/feature_selection_full_50879e38e130.h5ad</p>
 <hr>
-<h2>4.2. Feature selection</h2>
+<h2 id="42-feature-selection">4.2. Feature selection</h2>
 <h4>load file 9: <code>state_markers.csv</code></h4>
 <pre><code>file_version: 2026-04-21 10:55:48.543853355
 </code></pre>
-<h3>4.2.1. Highly Variable Gene selection</h3>
+<h3 id="421-highly-variable-gene-selection">4.2.1. Highly Variable Gene selection</h3>
 <p>Batch-aware HVG selection (batch_key='study'): genes ranked by variability within batches, so batch-specific genes (differing panels/platforms) are not selected</p>
 <p>HVGs selected: 5019 (including 89 whitelisted genes)</p>
 <p><a href="figures/hvg_before_seurat_5000_50879e38e130.png"><img src="figures/hvg_before_seurat_5000_50879e38e130.png" width="48%"></a>
 <a href="figures/hvg_after_seurat_5000_50879e38e130.png"><img src="figures/hvg_after_seurat_5000_50879e38e130.png" width="48%"></a></p>
-<h3>4.2.2. Top 20 expressed genes after selection:</h3>
+<h3 id="422-top-20-expressed-genes-after-selection">4.2.2. Top 20 expressed genes after selection:</h3>
 <p><a href="figures/top20_expr_genes_50879e38e130.png"><img src="figures/top20_expr_genes_50879e38e130.png" width="50%"></a></p>
-<h4>pca_umap</h4>
+<h4 id="pca_umap">pca_umap</h4>
 <p>function: pca_umap
 parameters:
   name: combined_cd8
 cache_file: data/pca_umap_59e92a352b42.h5ad</p>
 <hr>
-<h2>4.3. PCA UMAP (pre-scVI reference)</h2>
+<h2 id="43-pca-umap-pre-scvi-reference">4.3. PCA UMAP (pre-scVI reference)</h2>
 <p><a href="figures/combined_cd8_umap_pca_pre_integration_59e92a352b42.png"><img src="figures/combined_cd8_umap_pca_pre_integration_59e92a352b42.png" width="50%"></a></p>
-<h4>integrate_scanorama</h4>
+<h4 id="integrate_scanorama">integrate_scanorama</h4>
 <p>function: integrate_scanorama
 parameters:
   batch_cols: ["study", "assay_chemistry"]
   name: combined_cd8
 cache_file: data/integrate_scanorama_e7a97e691e19.h5ad</p>
 <hr>
-<h2>4.4. Scanorama integration</h2>
+<h2 id="44-scanorama-integration">4.4. Scanorama integration</h2>
 <p>assay_chemistry (5' vs 3'): {"5'": 25002}</p>
 <p>batches (study × assay_chemistry): {"Ali2023|5'": 9139, "GSE165045|5'": 4250, "Chow2023|5'": 3888, "Wong2022|5'": 3885, "Borcherding2021|5'": 3840}</p>
 <p>Split into 5 batches: {"Ali2023|5'": 9139, "Wong2022|5'": 3885, "GSE165045|5'": 4250, "Chow2023|5'": 3888, "Borcherding2021|5'": 3840}</p>
 <p>Integration embedding obsm['X_integrated']: (25002, 30)</p>
 <p>Stored layers['integrated_normalized_log1p']: Scanorama-corrected log-scale, range [-0.09484, 0.2238]</p>
-<h4>umap_integrated</h4>
+<h4 id="umap_integrated">umap_integrated</h4>
 <p>function: umap_integrated
 parameters:
   name: combined_cd8
 cache_file: data/umap_integrated_ab6969e9d75e.h5ad</p>
 <hr>
-<h2>4.5. UMAP on integration embedding (X_integrated)</h2>
+<h2 id="45-umap-on-integration-embedding-x_integrated">4.5. UMAP on integration embedding (X_integrated)</h2>
 <p>Leiden clusters: 11</p>
 <hr>
-<h2>4.6. COMBINED_CD8: integration comparison (PCA vs integrated UMAP)</h2>
+<h2 id="46-combined_cd8-integration-comparison-pca-vs-integrated-umap">4.6. COMBINED_CD8: integration comparison (PCA vs integrated UMAP)</h2>
 <p><a href="figures/combined_cd8_umap_pca_vs_integrated_before_ab6969e9d75e.png"><img src="figures/combined_cd8_umap_pca_vs_integrated_before_ab6969e9d75e.png" width="50%"></a></p>
 <p><a href="figures/combined_cd8_umap_pca_vs_integrated_after_ab6969e9d75e.png"><img src="figures/combined_cd8_umap_pca_vs_integrated_after_ab6969e9d75e.png" width="50%"></a></p>
 <hr>
-<h2>4.7. COMBINED_CD8: state labeling</h2>
-<h4>label_states</h4>
+<h2 id="47-combined_cd8-state-labeling">4.7. COMBINED_CD8: state labeling</h2>
+<h4 id="label_states">label_states</h4>
 <p>function: label_states
 parameters:
   marker_file: state_markers.csv
@@ -758,7 +758,7 @@ cache_file: data/label_states_b2e7ad6d2580.h5ad</p>
 <h4>load file 10: <code>state_markers.csv</code></h4>
 <pre><code>file_version: 2026-04-21 10:55:48.543853355
 </code></pre>
-<h3>4.7.1. Labeling states based on markers:</h3>
+<h3 id="471-labeling-states-based-on-markers">4.7.1. Labeling states based on markers:</h3>
 <table>
 <thead>
 <tr>
@@ -827,7 +827,7 @@ cache_file: data/label_states_b2e7ad6d2580.h5ad</p>
 </table>
 <p>State marker genes in dataset: 30 present, 1 missing</p>
 <p>Omitted state markers: IFNG1</p>
-<h3>4.7.2. Assigned state labels:</h3>
+<h3 id="472-assigned-state-labels">4.7.2. Assigned state labels:</h3>
 <table>
 <thead>
 <tr>
@@ -860,17 +860,17 @@ cache_file: data/label_states_b2e7ad6d2580.h5ad</p>
 </tbody>
 </table>
 <hr>
-<h2>4.8. COMBINED_CD8: sanity check lineage scores</h2>
+<h2 id="48-combined_cd8-sanity-check-lineage-scores">4.8. COMBINED_CD8: sanity check lineage scores</h2>
 <p><a href="figures/combined_cd8_sanity_check_scores_b2e7ad6d2580.png"><img src="figures/combined_cd8_sanity_check_scores_b2e7ad6d2580.png" width="50%"></a></p>
 <hr>
-<h2>4.9. COMBINED_CD8: overview UMAP</h2>
+<h2 id="49-combined_cd8-overview-umap">4.9. COMBINED_CD8: overview UMAP</h2>
 <p><a href="figures/umap_plot_combined_cd8_overview_b2e7ad6d2580.png"><img src="figures/umap_plot_combined_cd8_overview_b2e7ad6d2580.png" width="50%"></a></p>
 <hr>
-<h2>4.10. COMBINED_CD8: standalone disease UMAP</h2>
+<h2 id="410-combined_cd8-standalone-disease-umap">4.10. COMBINED_CD8: standalone disease UMAP</h2>
 <p><a href="figures/combined_cd8_umap_disease_b2e7ad6d2580.png"><img src="figures/combined_cd8_umap_disease_b2e7ad6d2580.png" width="50%"></a></p>
 <p><a href="figures/combined_cd8_umap_disease_detail_b2e7ad6d2580.png"><img src="figures/combined_cd8_umap_disease_detail_b2e7ad6d2580.png" width="50%"></a></p>
 <hr>
-<h2>4.11. COMBINED_CD8: individual state-marker gene UMAPs</h2>
+<h2 id="411-combined_cd8-individual-state-marker-gene-umaps">4.11. COMBINED_CD8: individual state-marker gene UMAPs</h2>
 <h4>load file 11: <code>state_markers.csv</code></h4>
 <pre><code>file_version: 2026-04-21 10:55:48.543853355
 </code></pre>
@@ -907,12 +907,12 @@ cache_file: data/label_states_b2e7ad6d2580.h5ad</p>
 <p>Calculated marker score <strong>marker_CD28</strong> from genes: CD28</p>
 <p><a href="figures/combined_cd8_umap_state_markers_12e75dd1f71c.png"><img src="figures/combined_cd8_umap_state_markers_12e75dd1f71c.png" width="50%"></a></p>
 <hr>
-<h1>5. COMBINED_CD8: cell type and metadata UMAPs</h1>
+<h1 id="5-combined_cd8-cell-type-and-metadata-umaps">5. COMBINED_CD8: cell type and metadata UMAPs</h1>
 <h4>load file 12: <code>inhibitory_receptor_list_new.csv</code></h4>
 <pre><code>file_version: 2026-05-13 15:49:25.468477661
 </code></pre>
 <hr>
-<h2>5.1. Marker scores: raw (log1p) and integrated (integrated_normalized_log1p)</h2>
+<h2 id="51-marker-scores-raw-log1p-and-integrated-integrated_normalized_log1p">5.1. Marker scores: raw (log1p) and integrated (integrated_normalized_log1p)</h2>
 <p>Calculated marker score <strong>cd3_score</strong> from genes: CD3G, CD3D, CD3E</p>
 <p>Calculated marker score <strong>cd3_score_integrated</strong> from genes: CD3G, CD3D, CD3E</p>
 <p>Calculated marker score <strong>cd8_score</strong> from genes: CD8A, CD8B, CD8B2</p>
@@ -930,24 +930,24 @@ cache_file: data/label_states_b2e7ad6d2580.h5ad</p>
 <p>Calculated marker score <strong>inhibitory_receptor_score</strong> from genes: CD22, SLAMF7, CD84, FCGR2B, CEACAM1, PILRA, LAG3, CD99L2, LILRB1, CD33, VSIR, CD5, CLEC4A, KLRB1, SLAMF1, CD244, LY9, KIR2DL1, SIGLEC9, LILRB2, KLRC1, HAVCR2, CD72, KLRG1, SIGLEC10, FCGR2A, FCRL3, SLAMF6, CTLA4, CD200R1, CLEC1B, LAIR1, KIR3DL1, SIGLEC7, CLEC12A, FCRL6, TIGIT, BTLA, LILRB4, PDCD1, KIR2DL4, SIRPA, LILRB3, KIR3DL2, KIR2DL3, PECAM1, MPIG6B</p>
 <p>Calculated marker score <strong>inhibitory_receptor_score_integrated</strong> from genes: CD22, SLAMF7, CD84, FCGR2B, CEACAM1, PILRA, LAG3, CD99L2, LILRB1, CD33, VSIR, CD5, CLEC4A, KLRB1, SLAMF1, CD244, LY9, KIR2DL1, SIGLEC9, LILRB2, KLRC1, HAVCR2, CD72, KLRG1, SIGLEC10, FCGR2A, FCRL3, SLAMF6, CTLA4, CD200R1, CLEC1B, LAIR1, KIR3DL1, SIGLEC7, CLEC12A, FCRL6, TIGIT, BTLA, LILRB4, PDCD1, KIR2DL4, SIRPA, LILRB3, KIR3DL2, KIR2DL3, PECAM1, MPIG6B</p>
 <hr>
-<h2>5.2. Annotation UMAP: integrated embedding vs PCA (raw embedding)</h2>
+<h2 id="52-annotation-umap-integrated-embedding-vs-pca-raw-embedding">5.2. Annotation UMAP: integrated embedding vs PCA (raw embedding)</h2>
 <p><a href="figures/combined_cd8_umap_celltypes_integrated_d003ed3ff815.png"><img src="figures/combined_cd8_umap_celltypes_integrated_d003ed3ff815.png" width="50%"></a></p>
 <p><a href="figures/combined_cd8_umap_celltypes_pca_d003ed3ff815.png"><img src="figures/combined_cd8_umap_celltypes_pca_d003ed3ff815.png" width="50%"></a></p>
 <hr>
-<h2>5.3. Score UMAP: integrated (integrated_normalized_log1p) vs raw (log1p)</h2>
+<h2 id="53-score-umap-integrated-integrated_normalized_log1p-vs-raw-log1p">5.3. Score UMAP: integrated (integrated_normalized_log1p) vs raw (log1p)</h2>
 <p><a href="figures/umap_plot_combined_cd8_umap_scores_integrated_vs_raw_d003ed3ff815.png"><img src="figures/umap_plot_combined_cd8_umap_scores_integrated_vs_raw_d003ed3ff815.png" width="50%"></a></p>
 <hr>
-<h1>6. COMBINED_CD8: inhibitory receptor analysis</h1>
+<h1 id="6-combined_cd8-inhibitory-receptor-analysis">6. COMBINED_CD8: inhibitory receptor analysis</h1>
 <p>Inhibitory receptor genes expressed (mean log1p &gt; 0.1): 20: SLAMF7, CD84, LAG3, VSIR, CD5, KLRB1, SLAMF1, CD244, LY9, KLRC1, HAVCR2, KLRG1, SLAMF6, CTLA4, CD200R1, LAIR1, FCRL6, TIGIT, PDCD1, PECAM1</p>
 <hr>
-<h2>6.1. IR expression per gene</h2>
+<h2 id="61-ir-expression-per-gene">6.1. IR expression per gene</h2>
 <p>IR obs columns — integrated: ['IR_SLAMF7_integrated', 'IR_CD84_integrated', 'IR_LAG3_integrated', 'IR_VSIR_integrated', 'IR_CD5_integrated', 'IR_KLRB1_integrated', 'IR_SLAMF1_integrated', 'IR_CD244_integrated', 'IR_LY9_integrated', 'IR_KLRC1_integrated', 'IR_HAVCR2_integrated', 'IR_KLRG1_integrated', 'IR_SLAMF6_integrated', 'IR_CTLA4_integrated', 'IR_CD200R1_integrated', 'IR_LAIR1_integrated', 'IR_FCRL6_integrated', 'IR_TIGIT_integrated', 'IR_PDCD1_integrated', 'IR_PECAM1_integrated']</p>
 <p>IR obs columns — raw:        ['IR_SLAMF7_raw', 'IR_CD84_raw', 'IR_LAG3_raw', 'IR_VSIR_raw', 'IR_CD5_raw', 'IR_KLRB1_raw', 'IR_SLAMF1_raw', 'IR_CD244_raw', 'IR_LY9_raw', 'IR_KLRC1_raw', 'IR_HAVCR2_raw', 'IR_KLRG1_raw', 'IR_SLAMF6_raw', 'IR_CTLA4_raw', 'IR_CD200R1_raw', 'IR_LAIR1_raw', 'IR_FCRL6_raw', 'IR_TIGIT_raw', 'IR_PDCD1_raw', 'IR_PECAM1_raw']</p>
 <h4>load file 13: <code>state_markers.csv</code></h4>
 <pre><code>file_version: 2026-04-21 10:55:48.543853355
 </code></pre>
 <hr>
-<h2>6.2. IR dotplots</h2>
+<h2 id="62-ir-dotplots">6.2. IR dotplots</h2>
 <p>Plotting 20 genes from adata.var[<code>inhibitory_receptor_genes_expressed</code>]</p>
 <p><a href="figures/combined_cd8_dotplot_IR_X_leiden_integrated_5789dc836e5a.png"><img src="figures/combined_cd8_dotplot_IR_X_leiden_integrated_5789dc836e5a.png" width="50%"></a></p>
 <p>Plotting 20 genes from adata.var[<code>inhibitory_receptor_genes_expressed</code>]</p>
@@ -969,7 +969,7 @@ cache_file: data/label_states_b2e7ad6d2580.h5ad</p>
 <p>Plotting 20 genes from adata.var[<code>inhibitory_receptor_genes_expressed</code>]</p>
 <p><a href="figures/combined_cd8_dotplot_IR_PBMC_vs_TIL_raw_5789dc836e5a.png"><img src="figures/combined_cd8_dotplot_IR_PBMC_vs_TIL_raw_5789dc836e5a.png" width="50%"></a></p>
 <hr>
-<h2>6.3. IR boxplots and stripplots</h2>
+<h2 id="63-ir-boxplots-and-stripplots">6.3. IR boxplots and stripplots</h2>
 <p>Plotting 20 genes from adata.var[<code>inhibitory_receptor_genes_expressed</code>]</p>
 <p><a href="figures/combined_cd8_boxplot_IR_X_leiden_integrated_5789dc836e5a.png"><img src="figures/combined_cd8_boxplot_IR_X_leiden_integrated_5789dc836e5a.png" width="50%"></a></p>
 <p>Plotting 20 genes from adata.var[<code>inhibitory_receptor_genes_expressed</code>]</p>
@@ -979,8 +979,8 @@ cache_file: data/label_states_b2e7ad6d2580.h5ad</p>
 <p>Plotting 20 genes from adata.var[<code>inhibitory_receptor_genes_expressed</code>]</p>
 <p><a href="figures/combined_cd8_stripplot_IR_X_leiden_raw_5789dc836e5a.png"><img src="figures/combined_cd8_stripplot_IR_X_leiden_raw_5789dc836e5a.png" width="50%"></a></p>
 <hr>
-<h2>6.4. FindAllMarkers</h2>
-<h4>dotplot_allmarkers</h4>
+<h2 id="64-findallmarkers">6.4. FindAllMarkers</h2>
+<h4 id="dotplot_allmarkers">dotplot_allmarkers</h4>
 <p>function: dotplot_allmarkers
 parameters:
   cluster_col: leiden
@@ -988,13 +988,13 @@ parameters:
   standard_scale: var
 cache_file: data/dotplot_allmarkers_7c1b41ebb0ed.h5ad</p>
 <hr>
-<h2>6.5. FindAllMarkers</h2>
-<h3>6.5.1. Finding significant genes with FindAllMarkers (via Seurat in R)</h3>
+<h2 id="65-findallmarkers">6.5. FindAllMarkers</h2>
+<h3 id="651-finding-significant-genes-with-findallmarkers-via-seurat-in-r">6.5.1. Finding significant genes with FindAllMarkers (via Seurat in R)</h3>
 <p>parallelising with up to 64 R worker(s)</p>
 <p>Ran FindAllMarkers in R, keeping up to 5 markers per cluster and selected 52 genes</p>
 <p>Plotting 52 genes from adata.var[<code>findallmarkers_selected</code>]</p>
 <p><a href="figures/dotplot_leiden_allmarkers_7c1b41ebb0ed.png"><img src="figures/dotplot_leiden_allmarkers_7c1b41ebb0ed.png" width="50%"></a></p>
-<h3>6.5.2. Cluster-to-state summary by <code>leiden</code>:</h3>
+<h3 id="652-cluster-to-state-summary-by-leiden">6.5.2. Cluster-to-state summary by <code>leiden</code>:</h3>
 <table>
 <thead>
 <tr>
@@ -1087,7 +1087,7 @@ cache_file: data/dotplot_allmarkers_7c1b41ebb0ed.h5ad</p>
 </table>
 <p>Saved cluster summary CSV for manual annotation: /ceph/project/sharmalab/dnimrich/cd8atlas/output/cd8_atlas/data/combined_cd8_cluster_state_summary.csv</p>
 <hr>
-<h2>6.6. IR UMAPs per gene</h2>
+<h2 id="66-ir-umaps-per-gene">6.6. IR UMAPs per gene</h2>
 <p><a href="figures/combined_cd8_umap_IR_integrated_embedding_integrated_7c1b41ebb0ed.png"><img src="figures/combined_cd8_umap_IR_integrated_embedding_integrated_7c1b41ebb0ed.png" width="50%"></a></p>
 <p><a href="figures/combined_cd8_umap_IR_integrated_embedding_raw_7c1b41ebb0ed.png"><img src="figures/combined_cd8_umap_IR_integrated_embedding_raw_7c1b41ebb0ed.png" width="50%"></a></p>
 <p><a href="figures/combined_cd8_umap_IR_pca_embedding_integrated_7c1b41ebb0ed.png"><img src="figures/combined_cd8_umap_IR_pca_embedding_integrated_7c1b41ebb0ed.png" width="50%"></a></p>
@@ -1141,7 +1141,7 @@ cache_file: data/dotplot_allmarkers_7c1b41ebb0ed.h5ad</p>
 <script>
 const DATASETS = [{"name": "pca_umap_59e92a352b42", "label": "pca_umap"}, {"name": "integrate_scanorama_e7a97e691e19", "label": "integrate_scanorama"}, {"name": "umap_integrated_ab6969e9d75e", "label": "umap_integrated"}, {"name": "label_states_b2e7ad6d2580", "label": "label_states"}, {"name": "dotplot_allmarkers_7c1b41ebb0ed", "label": "dotplot_allmarkers"}];
 const FILES = ["figures/cohort_overview_65aa4d64ac72.png", "figures/normalisation_total_counts_hist_84cf10887def.png", "figures/normalisation_log1p_hist_84cf10887def.png", "figures/t_cell_selection_scores_9502d195de8e.png", "figures/normalisation_total_counts_hist_3d289fdf4bf6.png", "figures/normalisation_log1p_hist_3d289fdf4bf6.png", "figures/hvg_before_seurat_5000_50879e38e130.png", "figures/hvg_after_seurat_5000_50879e38e130.png", "figures/top20_expr_genes_50879e38e130.png", "figures/combined_cd8_umap_pca_pre_integration_59e92a352b42.png", "figures/combined_cd8_umap_pca_vs_integrated_before_ab6969e9d75e.png", "figures/combined_cd8_umap_pca_vs_integrated_after_ab6969e9d75e.png", "figures/combined_cd8_sanity_check_scores_b2e7ad6d2580.png", "figures/umap_plot_combined_cd8_overview_b2e7ad6d2580.png", "figures/combined_cd8_umap_disease_b2e7ad6d2580.png", "figures/combined_cd8_umap_disease_detail_b2e7ad6d2580.png", "figures/combined_cd8_umap_state_markers_12e75dd1f71c.png", "figures/combined_cd8_umap_celltypes_integrated_d003ed3ff815.png", "figures/combined_cd8_umap_celltypes_pca_d003ed3ff815.png", "figures/umap_plot_combined_cd8_umap_scores_integrated_vs_raw_d003ed3ff815.png", "figures/combined_cd8_dotplot_IR_X_leiden_integrated_5789dc836e5a.png", "figures/combined_cd8_dotplot_IR_X_state_integrated_5789dc836e5a.png", "figures/combined_cd8_dotplot_IR_X_disease_integrated_5789dc836e5a.png", "figures/combined_cd8_dotplot_IR_X_disease_detail_integrated_5789dc836e5a.png", "figures/combined_cd8_dotplot_IR_PBMC_vs_TIL_integrated_5789dc836e5a.png", "figures/combined_cd8_dotplot_IR_X_leiden_raw_5789dc836e5a.png", "figures/combined_cd8_dotplot_IR_X_state_raw_5789dc836e5a.png", "figures/combined_cd8_dotplot_IR_X_disease_raw_5789dc836e5a.png", "figures/combined_cd8_dotplot_IR_X_disease_detail_raw_5789dc836e5a.png", "figures/combined_cd8_dotplot_IR_PBMC_vs_TIL_raw_5789dc836e5a.png", "figures/combined_cd8_boxplot_IR_X_leiden_integrated_5789dc836e5a.png", "figures/combined_cd8_stripplot_IR_X_leiden_integrated_5789dc836e5a.png", "figures/combined_cd8_boxplot_IR_X_leiden_raw_5789dc836e5a.png", "figures/combined_cd8_stripplot_IR_X_leiden_raw_5789dc836e5a.png", "figures/dotplot_leiden_allmarkers_7c1b41ebb0ed.png", "figures/combined_cd8_umap_IR_integrated_embedding_integrated_7c1b41ebb0ed.png", "figures/combined_cd8_umap_IR_integrated_embedding_raw_7c1b41ebb0ed.png", "figures/combined_cd8_umap_IR_pca_embedding_integrated_7c1b41ebb0ed.png", "figures/combined_cd8_umap_IR_pca_embedding_raw_7c1b41ebb0ed.png"];
-const HAS_PIPELINE = false;
+const HAS_PIPELINE = true;
 const SLUG = "cd8_atlas";
 const RUN = "20260923_140104_213745";
 const REPORT_FILENAME = "report_20260923_140104_213745.md";
