@@ -1,6 +1,15 @@
 [
   {
     "slug": "cd8_atlas",
+    "run": "20261006_143000_065128",
+    "title": "cd8_atlas",
+    "timestamp": "2026-10-06 14:30:00",
+    "n_figures": 95,
+    "n_datasets": 5,
+    "pdf_url": null
+  },
+  {
+    "slug": "cd8_atlas",
     "run": "20261006_131304_147950",
     "title": "cd8_atlas",
     "timestamp": "2026-10-06 13:13:04",
