@@ -1,0 +1,3816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>cd8_atlas</title>
+
+<script>
+try { if (localStorage.getItem("bioreport-theme") === "dark") document.documentElement.dataset.theme = "dark"; } catch (e) {}
+</script>
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f6f7f9; --panel: #ffffff; --line: #d6dae1; --text: #171a1f; --muted: #626a73;
+  --accent: #f24e38; --danger: #8a2f20; --button-bg: #f7f9fb; --input-bg: #ffffff;
+  --hover: #fff0ed; --selected-bg: #ffe2dc; --pre-bg: #f3f5f7; --tooltip-bg: #1f252b;
+  --folder-bg: #f6c453; --folder-border: #b18a2f; --file-bg: #f8fafc; --file-border: #9aa4af;
+  --sidebar-bg: #fff4f1; --repo-bg: #fff8f6; --repo-compact-bg: #ffe5df;
+  --explorer-bg: #fbfcfd; --viewer-bg: #fffdfa;
+  --mono: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  font-family: Inter, "Segoe UI", system-ui, sans-serif;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #111417; --panel: #181c20; --line: #343a42; --text: #edf1f5; --muted: #a8b0ba;
+  --accent: #ff725f; --danger: #ff8b72; --button-bg: #20262c; --input-bg: #12161a;
+  --hover: #38201c; --selected-bg: #4a251f; --pre-bg: #12161a; --tooltip-bg: #f4f6f8;
+  --folder-bg: #d9a93a; --folder-border: #8f7028; --file-bg: #20262c; --file-border: #707985;
+  --sidebar-bg: #241714; --repo-bg: #201512; --repo-compact-bg: #321b17;
+  --explorer-bg: #161b20; --viewer-bg: #1b1a17;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--text); margin: 0; }
+a { color: inherit; }
+
+header {
+  align-items: center; background: var(--panel); border-bottom: 1px solid var(--line);
+  display: grid; gap: 12px; grid-template-columns: auto minmax(0, 1fr) auto;
+  min-height: 52px; padding: 7px 18px; position: relative; z-index: 30;
+}
+h1 { align-items: center; display: inline-flex; font-size: 18px; gap: 8px; margin: 0; }
+.brand-logo {
+  align-items: center; background: var(--accent); border-radius: 6px; color: #fff;
+  display: inline-flex; font: 700 15px var(--mono); height: 24px; justify-content: center; width: 24px;
+}
+.brand-credit, .brand-credit:visited, .brand-credit:hover {
+  color: var(--muted); font-size: 9px; font-weight: 400; margin-left: 2px;
+  text-decoration: none; white-space: nowrap;
+}
+.repo-compact {
+  align-items: center; background: var(--repo-compact-bg); border: 1px solid var(--line);
+  border-radius: 6px; display: grid; gap: 8px; grid-template-columns: minmax(0, 1fr);
+  justify-self: center; min-height: 38px; padding: 4px 12px; width: min(760px, 100%);
+}
+.repo-title { font-size: 12px; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.repo-path { color: var(--muted); font: 11px var(--mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+button, .viewer-action-button {
+  background: var(--button-bg); border: 1px solid #b8c0ca; border-radius: 5px;
+  color: var(--text); cursor: pointer; font: inherit; font-size: 13px; padding: 7px 10px;
+  text-decoration: none;
+}
+button:hover, .viewer-action-button:hover { border-color: var(--accent); color: var(--accent); }
+input {
+  background: var(--input-bg); border: 1px solid #b8c0ca; border-radius: 5px;
+  color: var(--text); font: 13px var(--mono); min-width: 0; padding: 7px 8px; width: 100%;
+}
+.hint { color: var(--muted); font-size: 12px; line-height: 1.35; }
+.empty-state {
+  align-items: center; color: var(--muted); display: flex; font-size: 14px;
+  height: 100%; justify-content: center; min-height: 180px; text-align: center;
+}
+
+.theme-button { align-items: center; display: inline-flex; gap: 7px; justify-self: end; min-width: 82px; }
+.theme-icon { border: 2px solid currentColor; border-radius: 50%; display: inline-block; height: 14px; position: relative; width: 14px; }
+.theme-icon::after {
+  background: var(--button-bg); border-radius: 50%; content: ""; display: none;
+  height: 12px; left: 5px; position: absolute; top: -2px; width: 12px;
+}
+:root[data-theme="dark"] .theme-icon::after { display: block; }
+
+.file-row {
+  align-items: center; background: none; border: 1px solid transparent; border-radius: 4px;
+  color: inherit; cursor: pointer; display: grid; font: inherit; font-size: 13px; gap: 7px;
+  grid-template-columns: 20px minmax(0, 1fr) auto; min-height: 30px; padding: 5px 7px;
+  text-align: left; text-decoration: none; width: 100%;
+}
+.file-row:hover { background: var(--hover); border-color: transparent; color: inherit; }
+.file-row.selected {
+  background: var(--selected-bg); border-color: var(--accent);
+  box-shadow: inset 3px 0 0 var(--accent); font-weight: 650;
+}
+.file-name { align-items: baseline; display: inline-flex; min-width: 0; overflow: hidden; white-space: nowrap; }
+.file-name-base { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-size { color: var(--muted); font: 11px var(--mono); }
+.folder-icon {
+  background: var(--folder-bg); border: 1px solid var(--folder-border); border-radius: 2px;
+  display: inline-block; height: 13px; position: relative; width: 17px;
+}
+.folder-icon::before {
+  background: var(--folder-bg); border: 1px solid var(--folder-border); border-bottom: 0;
+  border-radius: 2px 2px 0 0; content: ""; height: 5px; left: 1px; position: absolute; top: -5px; width: 8px;
+}
+.file-icon {
+  background: var(--file-bg); border: 1px solid var(--file-border); border-radius: 2px;
+  display: inline-block; height: 16px; width: 13px;
+}
+.file-icon.h5ad { background: var(--selected-bg); border-color: var(--accent); }
+
+main {
+  display: grid; gap: 0; height: calc(100vh - 68px); padding: 8px 12px;
+  grid-template-columns: minmax(200px, 290px) 8px minmax(0, 1fr) 8px minmax(250px, 360px);
+}
+.pane-resizer { position: relative; }
+.pane-resizer::before { background: var(--line); content: ""; inset: 0 3px; position: absolute; }
+aside, .viewer, .pipeline-pane {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 6px;
+  min-height: 0; overflow: hidden;
+}
+aside { background: var(--sidebar-bg); display: grid; grid-template-rows: auto auto auto minmax(0, 1fr); }
+.sidebar-heading {
+  border-bottom: 1px solid var(--line); color: var(--muted); font-size: 13px;
+  font-weight: 700; padding: 9px 11px;
+}
+.sidebar-list { min-height: 0; overflow: auto; padding: 6px; }
+
+.viewer { background: var(--viewer-bg); display: grid; grid-template-rows: auto minmax(0, 1fr); min-width: 0; }
+.viewer-header {
+  align-items: center; border-bottom: 1px solid var(--line); display: grid; gap: 8px;
+  grid-template-columns: minmax(0, 1fr) auto; min-width: 0;
+}
+.viewer-title {
+  color: var(--muted); font: 12px var(--mono); overflow: hidden; padding: 9px 11px;
+  text-overflow: ellipsis; white-space: nowrap;
+}
+.viewer-actions { align-items: center; display: flex; gap: 6px; padding-right: 8px; }
+.viewer-actions .viewer-action-button { padding: 5px 8px; font-size: 12px; }
+.viewer-body { min-height: 0; overflow: auto; padding: 14px; }
+.viewer-body pre {
+  background: var(--pre-bg); border: 1px solid var(--line); border-radius: 5px;
+  font: 12px var(--mono); margin: 0; overflow: auto; padding: 10px; white-space: pre-wrap;
+}
+
+.markdown-body { line-height: 1.5; max-width: 980px; }
+.markdown-body img { display: inline-block; margin: 6px 8px 10px 0; max-width: 100%; vertical-align: top; }
+.markdown-body table { border-collapse: collapse; margin: 10px 0; }
+.markdown-body th, .markdown-body td { border: 1px solid var(--line); padding: 4px 7px; }
+.markdown-body code { background: var(--pre-bg); border-radius: 4px; font: 0.85em var(--mono); padding: 1px 5px; }
+.markdown-body .umap-link { text-decoration: none; }
+.markdown-body .umap-link code { background: var(--selected-bg); border: 1px solid var(--accent); cursor: pointer; }
+.markdown-body .umap-link:hover code { color: var(--accent); }
+.markdown-body h4, .markdown-body h5 { color: var(--muted); }
+.markdown-body .markdown-step-block {
+  border-left: 4px solid transparent; border-radius: 5px; cursor: pointer;
+  margin: 1em 0; padding: 4px 8px; scroll-margin-top: 18px;
+}
+.markdown-body .markdown-step-block:hover { border-left-color: var(--line); }
+.markdown-body .markdown-step-highlight {
+  background: var(--selected-bg); border-left-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--selected-bg);
+}
+
+.pipeline-pane { background: var(--sidebar-bg); display: grid; grid-template-rows: auto auto minmax(0, 1fr); }
+.pipeline-header { border-bottom: 1px solid var(--line); color: var(--muted); font-size: 13px; font-weight: 700; padding: 9px 11px; }
+.pipeline-status {
+  border-bottom: 1px solid var(--line); color: var(--muted); font-size: 12px;
+  overflow: hidden; padding: 6px 8px; text-overflow: ellipsis; white-space: nowrap;
+}
+.pipeline-graph { min-height: 0; overflow: auto; padding: 8px; }
+.pipeline-graph svg {
+  background: var(--viewer-bg); border: 1px solid var(--line); border-radius: 5px; display: block;
+}
+.pipeline-edge { stroke: var(--muted); stroke-width: 1.5; }
+.pipeline-edge.figure-edge { stroke: #7fb8d8; }
+.pipeline-edge.load-edge { stroke-dasharray: 4 3; }
+.pipeline-node { cursor: pointer; }
+.pipeline-node:hover circle, .pipeline-node:hover rect { filter: drop-shadow(0 0 7px #f24e38); stroke: var(--accent); stroke-width: 2.3; }
+.pipeline-node.selected .pipeline-step-box {
+  fill: var(--selected-bg); filter: drop-shadow(0 0 5px var(--accent));
+  stroke: var(--accent); stroke-width: 2.4;
+}
+.pipeline-data-dot { fill: #f24e38; stroke: #922718; stroke-width: 1.5; }
+.pipeline-source-dot { fill: #f24e38; stroke: #922718; stroke-width: 2; }
+.pipeline-input-dot { fill: var(--file-bg); stroke: var(--file-border); stroke-width: 1.5; }
+.pipeline-figure-dot { fill: #bfe7ff; stroke: #6aa9cf; stroke-width: 1.5; }
+.pipeline-step-box { fill: var(--repo-bg); stroke: var(--line); stroke-width: 1.2; }
+.pipeline-label { fill: var(--text); font: 700 12px var(--mono); pointer-events: none; }
+.pipeline-small-label { fill: var(--muted); font: 700 11px var(--mono); pointer-events: none; }
+
+#view-image img { border: 1px solid var(--line); border-radius: 5px; max-width: 100%; }
+.file-row-indent { padding-left: 24px; }
+
+.h5ad-headline {
+  color: var(--muted); display: flex; flex-wrap: wrap; font: 12px var(--mono);
+  gap: 4px 18px; margin-bottom: 10px; max-width: 980px;
+}
+.h5ad-headline-size { color: var(--text); font-size: 14px; font-weight: 700; }
+.h5ad-columns { margin-top: 14px; max-width: 980px; }
+.h5ad-columns summary { cursor: pointer; font-weight: 700; margin-bottom: 4px; user-select: none; }
+.h5ad-columns summary:hover { color: var(--accent); }
+.h5ad-table { border-collapse: collapse; margin: 6px 0 14px; width: 100%; }
+.h5ad-table th, .h5ad-table td { border: 1px solid var(--line); font-size: 12px; padding: 4px 7px; text-align: left; vertical-align: top; }
+.h5ad-table th { color: var(--muted); font-weight: 600; }
+
+.h5ad-umap-layout { align-items: flex-start; display: flex; gap: 16px; width: 100%; }
+.h5ad-umap-plot-area { display: flex; flex: 2 1 0%; flex-direction: column; gap: 8px; min-width: 0; }
+.h5ad-umap-plot-row { align-items: flex-start; display: flex; flex: 1 1 auto; gap: 8px; }
+.h5ad-umap-canvas {
+  aspect-ratio: 4 / 3; background: var(--bg); border: 1px solid var(--line); border-radius: 6px;
+  flex: 1 1 auto; min-width: 0; position: relative;
+}
+.h5ad-umap-svg { display: block; height: 100%; width: 100%; }
+.h5ad-umap-point { cursor: pointer; transition: r 0.08s ease, fill-opacity 0.08s ease; }
+.h5ad-umap-point.is-selected { stroke: var(--text); stroke-width: 1.5; }
+.h5ad-umap-mode-row { align-items: flex-start; display: flex; gap: 18px; }
+.h5ad-umap-mode-switch { display: flex; flex: 0 0 auto; font-size: 12px; gap: 14px; }
+.h5ad-umap-mode-switch label { align-items: center; color: var(--muted); display: flex; gap: 6px; }
+.h5ad-umap-mode-switch input { cursor: pointer; margin: 0; width: auto; }
+.h5ad-umap-tooltip {
+  background: var(--tooltip-bg); border-radius: 4px; color: var(--bg); font: 11px var(--mono);
+  padding: 3px 6px; pointer-events: none; position: absolute; transform: translate(-50%, -130%);
+  white-space: nowrap; z-index: 2;
+}
+.h5ad-umap-legend {
+  display: flex; flex-direction: column; font-size: 11px; gap: 4px; max-height: 420px;
+  max-width: 172px; overflow-y: auto; padding-right: 10px;
+}
+.h5ad-legend-title { font-weight: 700; margin-bottom: 2px; overflow-wrap: anywhere; }
+.h5ad-legend-item { align-items: center; border-radius: 3px; cursor: pointer; display: flex; gap: 5px; overflow-wrap: anywhere; padding: 1px 3px; }
+.h5ad-legend-item:hover { background: var(--line); }
+.h5ad-legend-item.is-active { background: var(--selected-bg); font-weight: 650; }
+.h5ad-legend-swatch { border-radius: 3px; flex: 0 0 auto; height: 10px; width: 10px; }
+.h5ad-legend-bar { border-radius: 3px; min-height: 80px; width: 14px; }
+.h5ad-legend-scale { display: flex; flex-direction: column; font: 10px var(--mono); justify-content: space-between; }
+
+.h5ad-panel {
+  border: 1px solid var(--line); border-radius: 6px; flex: 1 1 0%; max-height: 460px;
+  min-height: 0; min-width: 220px; overflow-y: auto; padding: 6px;
+}
+.h5ad-panel-rows { display: grid; gap: 6px; margin: 8px 0; }
+.h5ad-panel-row {
+  border: 1px solid transparent; border-radius: 4px; display: grid; gap: 3px 6px;
+  grid-template-areas: "colorby field trash" ". value value";
+  grid-template-columns: 16px minmax(0, 1fr) 20px; padding: 4px 2px 6px;
+}
+.h5ad-panel-row:hover { border-color: var(--line); }
+.h5ad-panel-row.is-color-by { background: color-mix(in srgb, var(--accent) 12%, transparent); border-color: var(--accent); }
+.h5ad-row-colorby { align-self: center; grid-area: colorby; text-align: center; }
+.h5ad-row-colorby input { cursor: pointer; margin: 0; width: auto; }
+.h5ad-row-name { font-size: 12px; grid-area: field; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.h5ad-row-value { color: var(--muted); font-size: 12px; grid-area: value; overflow-wrap: anywhere; }
+.h5ad-row-trash {
+  background: none; border: none; color: var(--muted); cursor: pointer; font-size: 12px;
+  grid-area: trash; line-height: 1; padding: 0;
+}
+.h5ad-row-trash:hover { border: none; color: var(--danger); }
+
+.h5ad-gene-field { display: flex; flex-direction: column; gap: 4px; }
+.h5ad-gene-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.h5ad-gene-chip {
+  align-items: center; background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border: 1px solid var(--accent); border-radius: 12px; display: inline-flex; font-size: 11px;
+  gap: 4px; padding: 2px 4px 2px 8px;
+}
+.h5ad-gene-chip-remove { background: none; border: none; border-radius: 50%; color: inherit; cursor: pointer; font-size: 10px; line-height: 1; padding: 2px 4px; }
+.h5ad-gene-chip-remove:hover { border: none; color: var(--danger); }
+.h5ad-gene-input-wrap { position: relative; }
+.h5ad-gene-input-wrap input { font-size: 12px; padding: 4px 7px; }
+.h5ad-row-dropdown {
+  background: var(--bg); border: 1px solid var(--line); border-radius: 4px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18); left: 0; max-height: 180px; overflow-y: auto;
+  position: absolute; right: 0; top: 100%; z-index: 10;
+}
+.h5ad-dropdown-item { cursor: pointer; font-size: 12px; padding: 4px 7px; }
+.h5ad-dropdown-item:hover { background: var(--line); }
+.gene-message { color: var(--danger); font-size: 11px; min-height: 14px; }
+
+.h5ad-marker-panel { flex: 1 1 auto; font-size: 11px; min-width: 0; }
+.h5ad-marker-panel-title { color: var(--muted); font-size: 11px; font-weight: 700; margin-bottom: 4px; text-transform: uppercase; }
+.h5ad-marker-list { display: flex; flex-direction: column; gap: 6px; max-height: 190px; overflow-y: auto; }
+.h5ad-marker-row { border-bottom: 1px solid var(--line); display: grid; gap: 3px; padding-bottom: 5px; }
+.h5ad-marker-row:last-child { border-bottom: none; }
+.h5ad-marker-gene { cursor: pointer; font-weight: 650; overflow-wrap: anywhere; }
+.h5ad-marker-gene:hover { color: var(--accent); }
+.h5ad-marker-meter { align-items: center; display: grid; gap: 6px; grid-template-columns: 58px 1fr 42px; }
+.h5ad-marker-meter-label { color: var(--muted); font-size: 10px; }
+.h5ad-marker-meter-track { background: var(--line); border-radius: 3px; height: 6px; overflow: hidden; }
+.h5ad-marker-meter-fill { background: var(--accent); display: block; height: 100%; }
+.h5ad-marker-meter-value { font: 10px var(--mono); text-align: right; }
+
+@media (max-width: 960px) {
+  main { grid-template-columns: 1fr; height: auto; }
+  .pane-resizer { display: none; }
+  aside, .viewer, .pipeline-pane { min-height: 240px; margin-bottom: 8px; }
+  .viewer { min-height: 460px; }
+  .h5ad-umap-layout { flex-wrap: wrap; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1><span class="brand-logo">b</span>bioreport <a class="brand-credit" href="https://theo.nimrichtr.cz">&copy;David Theodor Nimrichtr</a></h1>
+  <div class="repo-compact"><div><div class="repo-title">cd8_atlas</div><div class="repo-path">2026-10-06 16:00:46 &middot; reports/cd8_atlas/20261006_160046_610254</div></div></div>
+  <button id="themeButton" class="theme-button"><span class="theme-icon"></span><span class="theme-label">Light</span></button>
+</header>
+
+<main>
+  <aside>
+    <div class="sidebar-heading">Reports</div>
+    <div id="reportList" class="sidebar-list"></div>
+    <div class="sidebar-heading">Files</div>
+    <div id="viewList" class="sidebar-list"></div>
+  </aside>
+  <div class="pane-resizer"></div>
+  <section class="viewer">
+    <div class="viewer-header">
+      <div id="viewerTitle" class="viewer-title">report_20261006_160046_610254.md</div>
+      <div class="viewer-actions"><a class="viewer-action-button" href="../../../index.html">All reports</a></div>
+    </div>
+    <div class="viewer-body">
+      <div id="view-report" class="markdown-body"><hr>
+<h2 id="table-of-contents">Table of Contents</h2>
+<!-- bioreport-toc-start -->
+<ul>
+<li><a href="#1-loading-datasets">1. Loading datasets</a><ul>
+<li><a href="#load_dataset">load_dataset</a></li>
+<li><a href="#remap_columns">remap_columns</a></li>
+<li><a href="#qc_full">qc_full</a></li>
+<li><a href="#load_dataset-1">load_dataset</a></li>
+<li><a href="#remap_columns-1">remap_columns</a></li>
+<li><a href="#qc_full-1">qc_full</a></li>
+<li><a href="#load_dataset-2">load_dataset</a></li>
+<li><a href="#remap_columns-2">remap_columns</a></li>
+<li><a href="#qc_full-2">qc_full</a></li>
+<li><a href="#load_dataset-3">load_dataset</a></li>
+<li><a href="#remap_columns-3">remap_columns</a></li>
+<li><a href="#qc_full-3">qc_full</a></li>
+<li><a href="#load_dataset-4">load_dataset</a></li>
+<li><a href="#remap_columns-4">remap_columns</a></li>
+<li><a href="#qc_full-4">qc_full</a></li>
+<li><a href="#load_dataset-5">load_dataset</a></li>
+<li><a href="#remap_columns-5">remap_columns</a></li>
+<li><a href="#qc_full-5">qc_full</a></li>
+<li><a href="#load_dataset-6">load_dataset</a></li>
+<li><a href="#remap_columns-6">remap_columns</a></li>
+<li><a href="#qc_full-6">qc_full</a></li>
+<li><a href="#load_dataset-7">load_dataset</a></li>
+<li><a href="#remap_columns-7">remap_columns</a></li>
+<li><a href="#qc_full-7">qc_full</a></li>
+<li><a href="#load_dataset-8">load_dataset</a></li>
+<li><a href="#remap_columns-8">remap_columns</a></li>
+<li><a href="#qc_full-8">qc_full</a></li>
+<li><a href="#load_dataset-9">load_dataset</a></li>
+<li><a href="#remap_columns-9">remap_columns</a></li>
+<li><a href="#qc_full-9">qc_full</a></li>
+<li><a href="#load_dataset-10">load_dataset</a></li>
+<li><a href="#remap_columns-10">remap_columns</a></li>
+<li><a href="#qc_full-10">qc_full</a></li>
+<li><a href="#load_dataset-11">load_dataset</a></li>
+<li><a href="#remap_columns-11">remap_columns</a></li>
+<li><a href="#qc_full-11">qc_full</a></li>
+<li><a href="#load_dataset-12">load_dataset</a></li>
+<li><a href="#remap_columns-12">remap_columns</a></li>
+<li><a href="#qc_full-12">qc_full</a></li>
+<li><a href="#load_dataset-13">load_dataset</a></li>
+<li><a href="#remap_columns-13">remap_columns</a></li>
+<li><a href="#qc_full-13">qc_full</a></li>
+<li><a href="#load_dataset-14">load_dataset</a></li>
+<li><a href="#remap_columns-14">remap_columns</a></li>
+<li><a href="#qc_full-14">qc_full</a></li>
+<li><a href="#load_dataset-15">load_dataset</a></li>
+<li><a href="#remap_columns-15">remap_columns</a></li>
+<li><a href="#qc_full-15">qc_full</a></li>
+<li><a href="#load_dataset-16">load_dataset</a></li>
+<li><a href="#remap_columns-16">remap_columns</a></li>
+<li><a href="#qc_full-16">qc_full</a></li>
+<li><a href="#load_dataset-17">load_dataset</a></li>
+<li><a href="#remap_columns-17">remap_columns</a></li>
+<li><a href="#qc_full-17">qc_full</a></li>
+<li><a href="#load_dataset-18">load_dataset</a></li>
+<li><a href="#remap_columns-18">remap_columns</a></li>
+<li><a href="#qc_full-18">qc_full</a></li>
+</ul>
+</li>
+<li><a href="#2-integration-combined">2. Integration 'combined'</a></li>
+<li><a href="#21-cohort-overview">2.1. Cohort overview</a></li>
+<li><a href="#22-dataset-merge">2.2. Dataset merge</a><ul>
+<li><a href="#normalise">normalise</a></li>
+</ul>
+</li>
+<li><a href="#23-t-cell-selection-cd3-all-subtypes">2.3. T cell selection (CD3+; all subtypes)</a><ul>
+<li><a href="#score_and_select_t_cells">score_and_select_t_cells</a></li>
+</ul>
+</li>
+<li><a href="#3-combined-cd8-lineage">3. combined: CD8 lineage</a><ul>
+<li><a href="#select_cd8_cells">select_cd8_cells</a></li>
+</ul>
+</li>
+<li><a href="#4-combined_cd8-lineage-full-processing">4. COMBINED_CD8 lineage: full processing</a><ul>
+<li><a href="#normalise-1">normalise</a></li>
+<li><a href="#feature_selection_full">feature_selection_full</a></li>
+<li><a href="#pca_umap">pca_umap</a></li>
+</ul>
+</li>
+<li><a href="#41-pca-umap-pre-scvi-reference">4.1. PCA UMAP (pre-scVI reference)</a><ul>
+<li><a href="#integrate_scanorama">integrate_scanorama</a></li>
+</ul>
+</li>
+<li><a href="#42-scanorama-integration">4.2. Scanorama integration</a><ul>
+<li><a href="#umap_integrated">umap_integrated</a></li>
+</ul>
+</li>
+<li><a href="#43-umap-on-integration-embedding-x_integrated">4.3. UMAP on integration embedding (X_integrated)</a></li>
+<li><a href="#44-combined_cd8-integration-comparison-pca-vs-integrated-umap">4.4. COMBINED_CD8: integration comparison (PCA vs integrated UMAP)</a></li>
+<li><a href="#45-combined_cd8-state-labeling">4.5. COMBINED_CD8: state labeling</a><ul>
+<li><a href="#label_states">label_states</a></li>
+<li><a href="#451-labeling-states-based-on-markers">4.5.1. Labeling states based on markers:</a></li>
+<li><a href="#452-assigned-state-labels">4.5.2. Assigned state labels:</a></li>
+</ul>
+</li>
+<li><a href="#46-combined_cd8-sanity-check-lineage-scores">4.6. COMBINED_CD8: sanity check lineage scores</a></li>
+<li><a href="#47-combined_cd8-overview-umap">4.7. COMBINED_CD8: overview UMAP</a></li>
+<li><a href="#48-combined_cd8-standalone-disease-umap">4.8. COMBINED_CD8: standalone disease UMAP</a></li>
+<li><a href="#49-combined_cd8-individual-state-marker-gene-umaps">4.9. COMBINED_CD8: individual state-marker gene UMAPs</a></li>
+<li><a href="#5-combined_cd8-cell-type-and-metadata-umaps">5. COMBINED_CD8: cell type and metadata UMAPs</a></li>
+<li><a href="#51-marker-scores-raw-log1p-and-integrated-integrated_normalized_log1p">5.1. Marker scores: raw (log1p) and integrated (integrated_normalized_log1p)</a></li>
+<li><a href="#52-gamma-delta-score-umap-sanity-check">5.2. Gamma-delta score UMAP (sanity check)</a></li>
+<li><a href="#53-annotation-umap-integrated-embedding-vs-pca-raw-embedding">5.3. Annotation UMAP: integrated embedding vs PCA (raw embedding)</a></li>
+<li><a href="#54-score-umap-integrated-integrated_normalized_log1p-vs-raw-log1p">5.4. Score UMAP: integrated (integrated_normalized_log1p) vs raw (log1p)</a></li>
+<li><a href="#6-combined_cd8-inhibitory-receptor-analysis">6. COMBINED_CD8: inhibitory receptor analysis</a></li>
+<li><a href="#61-ir-expression-per-gene">6.1. IR expression per gene</a></li>
+<li><a href="#62-ir-dotplots">6.2. IR dotplots</a></li>
+<li><a href="#63-ir-boxplots-and-stripplots">6.3. IR boxplots and stripplots</a></li>
+<li><a href="#64-findallmarkers">6.4. FindAllMarkers</a><ul>
+<li><a href="#findallmarkers">findallmarkers</a></li>
+<li><a href="#641-finding-significant-genes-with-findallmarkers-via-seurat-in-r">6.4.1. Finding significant genes with FindAllMarkers (via Seurat in R)</a></li>
+<li><a href="#642-cluster-to-state-summary-by-leiden">6.4.2. Cluster-to-state summary by <code>leiden</code>:</a></li>
+</ul>
+</li>
+<li><a href="#65-ir-umaps-per-gene">6.5. IR UMAPs per gene</a></li>
+<li><a href="#7-combined_cd8-atlas-summary-studies-diseases-cell-states">7. COMBINED_CD8 atlas summary: studies, diseases, cell states</a></li>
+<li><a href="#71-which-studies-were-integrated">7.1. Which studies were integrated?</a></li>
+<li><a href="#72-which-diseases-does-it-span">7.2. Which diseases does it span?</a></li>
+<li><a href="#73-which-cell-states-were-captured">7.3. Which cell states were captured?</a></li>
+<li><a href="#74-umaps-all-cells-cell-states-diseases">7.4. UMAPs: all cells, cell states, diseases</a></li>
+<li><a href="#8-combined_cd8-atlas-summary-inhibitory-receptors">8. COMBINED_CD8 atlas summary: inhibitory receptors</a></li>
+<li><a href="#81-which-inhibitory-receptors-are-expressed-never-expressed-always-expressed">8.1. Which inhibitory receptors are expressed, never expressed, always expressed?</a></li>
+<li><a href="#82-does-expression-depend-on-cell-state-or-disease">8.2. Does expression depend on cell state or disease?</a></li>
+</ul>
+<!-- bioreport-toc-end -->
+
+<hr>
+<h1 id="1-loading-datasets">1. Loading datasets</h1>
+<h4 id="load_dataset">load_dataset</h4>
+<p>function: load_dataset
+parameters:
+  filename: GSE205589.raw_counts_stand.h5ad
+  max_cells: 30000
+  study: Ali2023
+  tissue_type: null
+cache_file: data/load_dataset_0cbd0fda4832.h5ad</p>
+<h4>load file 1: <code>GSE205589.raw_counts_stand.h5ad</code></h4>
+<pre><code>file_version: 2026-09-21 14:19:38.416365922
+</code></pre>
+<h4 id="remap_columns">remap_columns</h4>
+<p>function: remap_columns
+parameters:
+  column_map: {"Age": "age", "Chemistry": "chemistry", "Disease": "disease", "Donor": "donor", "Patient": "donor", "PatientID": "donor", "Sample": "sample_id", "SampleID": "sample_id", "Sex": "sex", "Tissue": "tissue_type", "assay": "chemistry", "cohort": "study", "condition": "disease", "condition_detail": "disease_detail", "dataset": "study", "detailed_context": "disease_detail", "diagnosis": "disease", "diagnosis_detail": "disease_detail", "disease_status": "disease", "disease_subtype": "disease_detail", "donor_id": "donor", "gender": "sex", "library_type": "chemistry", "organ": "tissue_type", "patient": "donor", "patient_id": "donor", "protocol": "chemistry", "sample": "sample_id", "sampleID": "sample_id", "sample_type": "tissue_type", "source_tissue": "tissue_type", "subtype": "disease_detail", "tissue": "tissue_type"}
+  defaults: {"chemistry": "10x_5v2"}
+cache_file: data/remap_columns_8ab5b300610c.h5ad</p>
+<p>Remapped columns: tissue → tissue_type</p>
+<h4 id="qc_full">qc_full</h4>
+<p>function: qc_full
+parameters:
+  excluded_gene_patterns: null
+  expected_doublet_rate: 0.05
+  frac_treshold: 0.05
+  low_count_treshold: 1000
+  mad_outlier_var: 5
+  min_cells_per_gene: 20
+  mitochondria_cutoff_percentage: 8
+  name: Ali2023_BC_OC
+cache_file: data/qc_full_f4a7644c36d5.h5ad</p>
+<h4 id="load_dataset-1">load_dataset</h4>
+<p>function: load_dataset
+parameters:
+  filename: GSE185344.raw_counts_stand.h5ad
+  max_cells: 30000
+  study: Wong2022
+  tissue_type: null
+cache_file: data/load_dataset_87df9f6f6049.h5ad</p>
+<h4>load file 2: <code>GSE185344.raw_counts_stand.h5ad</code></h4>
+<pre><code>file_version: 2026-09-09 09:26:05.966599429
+</code></pre>
+<h4 id="remap_columns-1">remap_columns</h4>
+<p>function: remap_columns
+parameters:
+  column_map: {"Age": "age", "Chemistry": "chemistry", "Disease": "disease", "Donor": "donor", "Patient": "donor", "PatientID": "donor", "Sample": "sample_id", "SampleID": "sample_id", "Sex": "sex", "Tissue": "tissue_type", "assay": "chemistry", "cohort": "study", "condition": "disease", "condition_detail": "disease_detail", "dataset": "study", "detailed_context": "disease_detail", "diagnosis": "disease", "diagnosis_detail": "disease_detail", "disease_status": "disease", "disease_subtype": "disease_detail", "donor_id": "donor", "gender": "sex", "library_type": "chemistry", "organ": "tissue_type", "patient": "donor", "patient_id": "donor", "protocol": "chemistry", "sample": "sample_id", "sampleID": "sample_id", "sample_type": "tissue_type", "source_tissue": "tissue_type", "subtype": "disease_detail", "tissue": "tissue_type"}
+  defaults: {"chemistry": "10x_5v1", "disease": "PrC", "disease_detail": "Prostate cancer (ICC/IDC)"}
+cache_file: data/remap_columns_b7ada7a031bc.h5ad</p>
+<p>Remapped columns: tissue → tissue_type</p>
+<h4 id="qc_full-1">qc_full</h4>
+<p>function: qc_full
+parameters:
+  excluded_gene_patterns: null
+  expected_doublet_rate: 0.05
+  frac_treshold: 0.05
+  low_count_treshold: 1000
+  mad_outlier_var: 5
+  min_cells_per_gene: 20
+  mitochondria_cutoff_percentage: 8
+  name: Wong2022_PrC_prostate
+cache_file: data/qc_full_0c0867d93e50.h5ad</p>
+<h4 id="load_dataset-2">load_dataset</h4>
+<p>function: load_dataset
+parameters:
+  filename: GSE165045.raw_counts_stand.h5ad
+  max_cells: 30000
+  study: Lee2022
+  tissue_type: tissue
+cache_file: data/load_dataset_6bd9db1d6653.h5ad</p>
+<h4>load file 3: <code>GSE165045.raw_counts_stand.h5ad</code></h4>
+<pre><code>file_version: 2026-09-21 14:17:52.508620201
+</code></pre>
+<h4 id="remap_columns-2">remap_columns</h4>
+<p>function: remap_columns
+parameters:
+  column_map: {"Age": "age", "Chemistry": "chemistry", "Disease": "disease", "Donor": "donor", "Patient": "donor", "PatientID": "donor", "Sample": "sample_id", "SampleID": "sample_id", "Sex": "sex", "Tissue": "tissue_type", "assay": "chemistry", "cohort": "study", "condition": "disease", "condition_detail": "disease_detail", "dataset": "study", "detailed_context": "disease_detail", "diagnosis": "disease", "diagnosis_detail": "disease_detail", "disease_status": "disease", "disease_subtype": "disease_detail", "donor_id": "donor", "gender": "sex", "library_type": "chemistry", "organ": "tissue_type", "patient": "donor", "patient_id": "donor", "protocol": "chemistry", "sample": "sample_id", "sampleID": "sample_id", "sample_type": "tissue_type", "source_tissue": "tissue_type", "subtype": "disease_detail", "tissue": "tissue_type"}
+  defaults: {"assay_chemistry": "5'", "cellranger": "4.0.0", "chemistry": "10x_5p", "data_source": "GEO GSE165045", "disease": "CP", "disease_detail": "Chronic pancreatitis (idiopathic and hereditary)", "tissue_detail": "pancreas"}
+cache_file: data/remap_columns_c4cdf2b0abfe.h5ad</p>
+<p>remap_columns: no renames applied (targets already present or sources absent)</p>
+<p>Default applied: assay_chemistry = '5''</p>
+<p>Default applied: data_source = 'GEO GSE165045'</p>
+<p>Default applied: cellranger = '4.0.0'</p>
+<h4 id="qc_full-2">qc_full</h4>
+<p>function: qc_full
+parameters:
+  excluded_gene_patterns: null
+  expected_doublet_rate: 0.05
+  frac_treshold: 0.05
+  low_count_treshold: 1000
+  mad_outlier_var: 5
+  min_cells_per_gene: 20
+  mitochondria_cutoff_percentage: 8
+  name: Lee2022_pancreas
+cache_file: data/qc_full_9a8c7a0e932a.h5ad</p>
+<h4 id="load_dataset-3">load_dataset</h4>
+<p>function: load_dataset
+parameters:
+  filename: GSE212217.raw_counts_stand.h5ad
+  max_cells: 30000
+  study: Chow2023
+  tissue_type: PBMC
+cache_file: data/load_dataset_a17a080670b7.h5ad</p>
+<h4>load file 4: <code>GSE212217.raw_counts_stand.h5ad</code></h4>
+<pre><code>file_version: 2026-09-09 09:27:43.840832498
+</code></pre>
+<h4 id="remap_columns-3">remap_columns</h4>
+<p>function: remap_columns
+parameters:
+  column_map: {"Age": "age", "Chemistry": "chemistry", "Disease": "disease", "Donor": "donor", "Patient": "donor", "PatientID": "donor", "Sample": "sample_id", "SampleID": "sample_id", "Sex": "sex", "Tissue": "tissue_type", "assay": "chemistry", "cohort": "study", "condition": "disease", "condition_detail": "disease_detail", "dataset": "study", "detailed_context": "disease_detail", "diagnosis": "disease", "diagnosis_detail": "disease_detail", "disease_status": "disease", "disease_subtype": "disease_detail", "donor_id": "donor", "gender": "sex", "library_type": "chemistry", "organ": "tissue_type", "patient": "donor", "patient_id": "donor", "protocol": "chemistry", "sample": "sample_id", "sampleID": "sample_id", "sample_type": "tissue_type", "source_tissue": "tissue_type", "subtype": "disease_detail", "tissue": "tissue_type"}
+  defaults: {"assay_chemistry": "5'", "chemistry": "10x_5v1", "data_source": "GEO GSE212217", "disease": "EC", "disease_detail": "Endometrial carcinoma (MMRd)"}
+cache_file: data/remap_columns_0e948dd0927c.h5ad</p>
+<p>remap_columns: no renames applied (targets already present or sources absent)</p>
+<p>Default applied: assay_chemistry = '5''</p>
+<p>Default applied: data_source = 'GEO GSE212217'</p>
+<h4 id="qc_full-3">qc_full</h4>
+<p>function: qc_full
+parameters:
+  excluded_gene_patterns: null
+  expected_doublet_rate: 0.05
+  frac_treshold: 0.05
+  low_count_treshold: 1000
+  mad_outlier_var: 5
+  min_cells_per_gene: 20
+  mitochondria_cutoff_percentage: 8
+  name: Chow2023_EC_PBMC
+cache_file: data/qc_full_5c2927c22a88.h5ad</p>
+<h4 id="load_dataset-4">load_dataset</h4>
+<p>function: load_dataset
+parameters:
+  filename: GSE121636.raw_counts_stand.h5ad
+  max_cells: 30000
+  study: Borcherding2021
+  tissue_type: null
+cache_file: data/load_dataset_cd4d7d06c2df.h5ad</p>
+<h4>load file 5: <code>GSE121636.raw_counts_stand.h5ad</code></h4>
+<pre><code>file_version: 2026-09-09 09:26:35.540482876
+</code></pre>
+<h4 id="remap_columns-4">remap_columns</h4>
+<p>function: remap_columns
+parameters:
+  column_map: {"Age": "age", "Chemistry": "chemistry", "Disease": "disease", "Donor": "donor", "Patient": "donor", "PatientID": "donor", "Sample": "sample_id", "SampleID": "sample_id", "Sex": "sex", "Tissue": "tissue_type", "assay": "chemistry", "cohort": "study", "condition": "disease", "condition_detail": "disease_detail", "dataset": "study", "detailed_context": "disease_detail", "diagnosis": "disease", "diagnosis_detail": "disease_detail", "disease_status": "disease", "disease_subtype": "disease_detail", "donor_id": "donor", "gender": "sex", "library_type": "chemistry", "organ": "tissue_type", "patient": "donor", "patient_id": "donor", "protocol": "chemistry", "sample": "sample_id", "sampleID": "sample_id", "sample_type": "tissue_type", "source_tissue": "tissue_type", "subtype": "disease_detail", "tissue": "tissue_type"}
+  defaults: {"assay_chemistry": "5'", "cellranger": "2.2.0", "chemistry": "10x_5v2", "data_source": "GEO GSE121636", "disease": "ccRCC", "disease_detail": "Clear cell renal carcinoma"}
+cache_file: data/remap_columns_3a54853a6fe2.h5ad</p>
+<p>Remapped columns: tissue → tissue_type</p>
+<p>Default applied: assay_chemistry = '5''</p>
+<p>Default applied: data_source = 'GEO GSE121636'</p>
+<p>Default applied: cellranger = '2.2.0'</p>
+<h4 id="qc_full-4">qc_full</h4>
+<p>function: qc_full
+parameters:
+  excluded_gene_patterns: null
+  expected_doublet_rate: 0.05
+  frac_treshold: 0.05
+  low_count_treshold: 1000
+  mad_outlier_var: 5
+  min_cells_per_gene: 20
+  mitochondria_cutoff_percentage: 8
+  name: Borcherding2021_ccRCC
+cache_file: data/qc_full_9907e19f8d30.h5ad</p>
+<h4 id="load_dataset-5">load_dataset</h4>
+<p>function: load_dataset
+parameters:
+  filename: Agne_CD.raw_counts_stand.h5ad
+  max_cells: 30000
+  study: Agne_CD
+  tissue_type: tissue
+cache_file: data/load_dataset_e416fcbb5f44.h5ad</p>
+<h4>load file 6: <code>Agne_CD.raw_counts_stand.h5ad</code></h4>
+<pre><code>file_version: 2026-10-06 12:31:32.239318799
+</code></pre>
+<h4 id="remap_columns-5">remap_columns</h4>
+<p>function: remap_columns
+parameters:
+  column_map: {"Age": "age", "Chemistry": "chemistry", "Disease": "disease", "Donor": "donor", "Patient": "donor", "PatientID": "donor", "Sample": "sample_id", "SampleID": "sample_id", "Sex": "sex", "Tissue": "tissue_type", "assay": "chemistry", "cohort": "study", "condition": "disease", "condition_detail": "disease_detail", "dataset": "study", "detailed_context": "disease_detail", "diagnosis": "disease", "diagnosis_detail": "disease_detail", "disease_status": "disease", "disease_subtype": "disease_detail", "donor_id": "donor", "gender": "sex", "library_type": "chemistry", "organ": "tissue_type", "patient": "donor", "patient_id": "donor", "protocol": "chemistry", "sample": "sample_id", "sampleID": "sample_id", "sample_type": "tissue_type", "source_tissue": "tissue_type", "subtype": "disease_detail", "tissue": "tissue_type"}
+  defaults: {"assay_chemistry": "5'", "chemistry": "10x_5v1", "data_source": "in-house (Agne)", "disease": "CD", "disease_detail": "Crohn's disease (ileum)", "tissue_detail": "small intestine (ileum)"}
+cache_file: data/remap_columns_7b74eec39d9a.h5ad</p>
+<p>remap_columns: no renames applied (targets already present or sources absent)</p>
+<p>Default applied: assay_chemistry = '5''</p>
+<p>Default applied: data_source = 'in-house (Agne)'</p>
+<h4 id="qc_full-5">qc_full</h4>
+<p>function: qc_full
+parameters:
+  excluded_gene_patterns: null
+  expected_doublet_rate: 0.05
+  frac_treshold: 0.05
+  low_count_treshold: 1000
+  mad_outlier_var: 5
+  min_cells_per_gene: 20
+  mitochondria_cutoff_percentage: 8
+  name: Agne_CD_ileum
+cache_file: data/qc_full_a639fc18d440.h5ad</p>
+<h4 id="load_dataset-6">load_dataset</h4>
+<p>function: load_dataset
+parameters:
+  filename: Agne_CD_merad.raw_counts_stand.h5ad
+  max_cells: 30000
+  study: Martin_CD
+  tissue_type: tissue
+cache_file: data/load_dataset_712b5b8781f1.h5ad</p>
+<h4>load file 7: <code>Agne_CD_merad.raw_counts_stand.h5ad</code></h4>
+<pre><code>file_version: 2026-10-06 12:31:31.569275871
+</code></pre>
+<h4 id="remap_columns-6">remap_columns</h4>
+<p>function: remap_columns
+parameters:
+  column_map: {"Age": "age", "Chemistry": "chemistry", "Disease": "disease", "Donor": "donor", "Patient": "donor", "PatientID": "donor", "Sample": "sample_id", "SampleID": "sample_id", "Sex": "sex", "Tissue": "tissue_type", "assay": "chemistry", "cohort": "study", "condition": "disease", "condition_detail": "disease_detail", "dataset": "study", "detailed_context": "disease_detail", "diagnosis": "disease", "diagnosis_detail": "disease_detail", "disease_status": "disease", "disease_subtype": "disease_detail", "donor_id": "donor", "gender": "sex", "library_type": "chemistry", "organ": "tissue_type", "patient": "donor", "patient_id": "donor", "protocol": "chemistry", "sample": "sample_id", "sampleID": "sample_id", "sample_type": "tissue_type", "source_tissue": "tissue_type", "subtype": "disease_detail", "tissue": "tissue_type"}
+  defaults: {"assay_chemistry": "3'", "cellranger": "2.0", "chemistry": "10x_3v2", "data_source": "published (PMID 31474370)", "disease": "CD", "disease_detail": "Crohn's disease (ileum, Martin/Merad)", "tissue_detail": "small intestine (ileum)"}
+cache_file: data/remap_columns_b43cd01a8afd.h5ad</p>
+<p>remap_columns: no renames applied (targets already present or sources absent)</p>
+<p>Default applied: assay_chemistry = '3''</p>
+<p>Default applied: data_source = 'published (PMID 31474370)'</p>
+<p>Default applied: cellranger = '2.0'</p>
+<h4 id="qc_full-6">qc_full</h4>
+<p>function: qc_full
+parameters:
+  excluded_gene_patterns: null
+  expected_doublet_rate: 0.05
+  frac_treshold: 0.05
+  low_count_treshold: 1000
+  mad_outlier_var: 5
+  min_cells_per_gene: 20
+  mitochondria_cutoff_percentage: 8
+  name: Martin_CD_ileum
+cache_file: data/qc_full_ca15d917f7ec.h5ad</p>
+<h4 id="load_dataset-7">load_dataset</h4>
+<p>function: load_dataset
+parameters:
+  filename: GSE144469.raw_counts_stand.h5ad
+  max_cells: 30000
+  study: Luoma2020
+  tissue_type: tissue
+cache_file: data/load_dataset_c7cb5e1de71e.h5ad</p>
+<h4>load file 8: <code>GSE144469.raw_counts_stand.h5ad</code></h4>
+<pre><code>file_version: 2026-10-06 12:31:52.123592475
+</code></pre>
+<h4 id="remap_columns-7">remap_columns</h4>
+<p>function: remap_columns
+parameters:
+  column_map: {"Age": "age", "Chemistry": "chemistry", "Disease": "disease", "Donor": "donor", "Patient": "donor", "PatientID": "donor", "Sample": "sample_id", "SampleID": "sample_id", "Sex": "sex", "Tissue": "tissue_type", "assay": "chemistry", "cohort": "study", "condition": "disease", "condition_detail": "disease_detail", "dataset": "study", "detailed_context": "disease_detail", "diagnosis": "disease", "diagnosis_detail": "disease_detail", "disease_status": "disease", "disease_subtype": "disease_detail", "donor_id": "donor", "gender": "sex", "library_type": "chemistry", "organ": "tissue_type", "patient": "donor", "patient_id": "donor", "protocol": "chemistry", "sample": "sample_id", "sampleID": "sample_id", "sample_type": "tissue_type", "source_tissue": "tissue_type", "subtype": "disease_detail", "tissue": "tissue_type"}
+  defaults: {"assay_chemistry": "5'", "cellranger": "3.0.2", "chemistry": "10x_5v1", "data_source": "GEO GSE144469", "disease": "Colitis", "disease_detail": "Checkpoint-inhibitor-induced colitis", "tissue_detail": "large intestine (colon)"}
+cache_file: data/remap_columns_de1193615a25.h5ad</p>
+<p>remap_columns: no renames applied (targets already present or sources absent)</p>
+<p>Default applied: assay_chemistry = '5''</p>
+<p>Default applied: data_source = 'GEO GSE144469'</p>
+<p>Default applied: cellranger = '3.0.2'</p>
+<h4 id="qc_full-7">qc_full</h4>
+<p>function: qc_full
+parameters:
+  excluded_gene_patterns: null
+  expected_doublet_rate: 0.05
+  frac_treshold: 0.05
+  low_count_treshold: 1000
+  mad_outlier_var: 5
+  min_cells_per_gene: 20
+  mitochondria_cutoff_percentage: 8
+  name: Luoma2020_Colitis_colon
+cache_file: data/qc_full_a3ca94ba9720.h5ad</p>
+<h4 id="load_dataset-8">load_dataset</h4>
+<p>function: load_dataset
+parameters:
+  filename: Agne_developmental.raw_counts_stand.h5ad
+  max_cells: 30000
+  study: Agne_developmental
+  tissue_type: tissue
+cache_file: data/load_dataset_e4f9a94c20a5.h5ad</p>
+<h4>load file 9: <code>Agne_developmental.raw_counts_stand.h5ad</code></h4>
+<pre><code>file_version: 2026-10-06 12:31:38.553723320
+</code></pre>
+<h4 id="remap_columns-8">remap_columns</h4>
+<p>function: remap_columns
+parameters:
+  column_map: {"Age": "age", "Chemistry": "chemistry", "Disease": "disease", "Donor": "donor", "Patient": "donor", "PatientID": "donor", "Sample": "sample_id", "SampleID": "sample_id", "Sex": "sex", "Tissue": "tissue_type", "assay": "chemistry", "cohort": "study", "condition": "disease", "condition_detail": "disease_detail", "dataset": "study", "detailed_context": "disease_detail", "diagnosis": "disease", "diagnosis_detail": "disease_detail", "disease_status": "disease", "disease_subtype": "disease_detail", "donor_id": "donor", "gender": "sex", "library_type": "chemistry", "organ": "tissue_type", "patient": "donor", "patient_id": "donor", "protocol": "chemistry", "sample": "sample_id", "sampleID": "sample_id", "sample_type": "tissue_type", "source_tissue": "tissue_type", "subtype": "disease_detail", "tissue": "tissue_type"}
+  defaults: {"assay_chemistry": "3'M", "cell_sort": "CD45+ (T-cell subset)", "cellranger": "7.0.0", "chemistry": "10x_3p_multiome", "data_source": "in-house (Agne)", "disease": "Healthy", "disease_detail": "Pediatric and fetal development (intestine)", "tissue_detail": "small + large intestine"}
+cache_file: data/remap_columns_ab78eba805d7.h5ad</p>
+<p>remap_columns: no renames applied (targets already present or sources absent)</p>
+<p>Default applied: disease_detail = 'Pediatric and fetal development (intestine)'</p>
+<p>Default applied: assay_chemistry = '3'M'</p>
+<p>Default applied: data_source = 'in-house (Agne)'</p>
+<p>Default applied: cell_sort = 'CD45+ (T-cell subset)'</p>
+<p>Default applied: cellranger = '7.0.0'</p>
+<h4 id="qc_full-8">qc_full</h4>
+<p>function: qc_full
+parameters:
+  excluded_gene_patterns: null
+  expected_doublet_rate: 0.05
+  frac_treshold: 0.05
+  low_count_treshold: 1000
+  mad_outlier_var: 5
+  min_cells_per_gene: 20
+  mitochondria_cutoff_percentage: 8
+  name: Agne_dev_intestine
+cache_file: data/qc_full_2985dbafd87e.h5ad</p>
+<h4 id="load_dataset-9">load_dataset</h4>
+<p>function: load_dataset
+parameters:
+  filename: Agne_colonpolyp.raw_counts_stand.h5ad
+  max_cells: 30000
+  study: Agne_polyp
+  tissue_type: tissue
+cache_file: data/load_dataset_1f41442a3ce9.h5ad</p>
+<h4>load file 10: <code>Agne_colonpolyp.raw_counts_stand.h5ad</code></h4>
+<pre><code>file_version: 2026-10-06 12:31:36.169570589
+</code></pre>
+<h4 id="remap_columns-9">remap_columns</h4>
+<p>function: remap_columns
+parameters:
+  column_map: {"Age": "age", "Chemistry": "chemistry", "Disease": "disease", "Donor": "donor", "Patient": "donor", "PatientID": "donor", "Sample": "sample_id", "SampleID": "sample_id", "Sex": "sex", "Tissue": "tissue_type", "assay": "chemistry", "cohort": "study", "condition": "disease", "condition_detail": "disease_detail", "dataset": "study", "detailed_context": "disease_detail", "diagnosis": "disease", "diagnosis_detail": "disease_detail", "disease_status": "disease", "disease_subtype": "disease_detail", "donor_id": "donor", "gender": "sex", "library_type": "chemistry", "organ": "tissue_type", "patient": "donor", "patient_id": "donor", "protocol": "chemistry", "sample": "sample_id", "sampleID": "sample_id", "sample_type": "tissue_type", "source_tissue": "tissue_type", "subtype": "disease_detail", "tissue": "tissue_type"}
+  defaults: {"assay_chemistry": "3'M", "cell_sort": "CD45+ (T-cell subset)", "cellranger": "7.0.0", "chemistry": "10x_3p_multiome", "data_source": "in-house (Agne)", "disease": "pcancer", "disease_detail": "Colorectal polyps (pre-cancer)", "tissue_detail": "large intestine (colon)"}
+cache_file: data/remap_columns_b606f7b4f9bd.h5ad</p>
+<p>remap_columns: no renames applied (targets already present or sources absent)</p>
+<p>Default applied: assay_chemistry = '3'M'</p>
+<p>Default applied: data_source = 'in-house (Agne)'</p>
+<p>Default applied: cell_sort = 'CD45+ (T-cell subset)'</p>
+<p>Default applied: cellranger = '7.0.0'</p>
+<h4 id="qc_full-9">qc_full</h4>
+<p>function: qc_full
+parameters:
+  excluded_gene_patterns: null
+  expected_doublet_rate: 0.05
+  frac_treshold: 0.05
+  low_count_treshold: 1000
+  mad_outlier_var: 5
+  min_cells_per_gene: 20
+  mitochondria_cutoff_percentage: 8
+  name: Agne_polyp_colon
+cache_file: data/qc_full_8638ee2f7473.h5ad</p>
+<h4 id="load_dataset-10">load_dataset</h4>
+<p>function: load_dataset
+parameters:
+  filename: Agne_Celiac_ds2_CD45.raw_counts_stand.h5ad
+  max_cells: 30000
+  study: Agne_Celiac_ds2
+  tissue_type: tissue
+cache_file: data/load_dataset_5ecf4877954f.h5ad</p>
+<h4>load file 11: <code>Agne_Celiac_ds2_CD45.raw_counts_stand.h5ad</code></h4>
+<pre><code>file_version: 2026-10-06 12:31:34.844485700
+</code></pre>
+<h4 id="remap_columns-10">remap_columns</h4>
+<p>function: remap_columns
+parameters:
+  column_map: {"Age": "age", "Chemistry": "chemistry", "Disease": "disease", "Donor": "donor", "Patient": "donor", "PatientID": "donor", "Sample": "sample_id", "SampleID": "sample_id", "Sex": "sex", "Tissue": "tissue_type", "assay": "chemistry", "cohort": "study", "condition": "disease", "condition_detail": "disease_detail", "dataset": "study", "detailed_context": "disease_detail", "diagnosis": "disease", "diagnosis_detail": "disease_detail", "disease_status": "disease", "disease_subtype": "disease_detail", "donor_id": "donor", "gender": "sex", "library_type": "chemistry", "organ": "tissue_type", "patient": "donor", "patient_id": "donor", "protocol": "chemistry", "sample": "sample_id", "sampleID": "sample_id", "sample_type": "tissue_type", "source_tissue": "tissue_type", "subtype": "disease_detail", "tissue": "tissue_type"}
+  defaults: {"assay_chemistry": "5'", "cell_sort": "CD45+", "chemistry": "10x_5v1", "data_source": "in-house (Agne)", "disease": "CeD", "disease_detail": "Celiac disease (duodenum, CD45 sort)", "tissue_detail": "small intestine (duodenum)"}
+cache_file: data/remap_columns_f2aed035f5ea.h5ad</p>
+<p>remap_columns: no renames applied (targets already present or sources absent)</p>
+<p>Default applied: assay_chemistry = '5''</p>
+<p>Default applied: data_source = 'in-house (Agne)'</p>
+<p>Default applied: cell_sort = 'CD45+'</p>
+<h4 id="qc_full-10">qc_full</h4>
+<p>function: qc_full
+parameters:
+  excluded_gene_patterns: null
+  expected_doublet_rate: 0.05
+  frac_treshold: 0.05
+  low_count_treshold: 1000
+  mad_outlier_var: 5
+  min_cells_per_gene: 20
+  mitochondria_cutoff_percentage: 8
+  name: Agne_Celiac_ds2_CD45_duodenum
+cache_file: data/qc_full_c1559f90ddee.h5ad</p>
+<h4 id="load_dataset-11">load_dataset</h4>
+<p>function: load_dataset
+parameters:
+  filename: Agne_UC_CD8.raw_counts_stand.h5ad
+  max_cells: 30000
+  study: Agne_UC_CD8
+  tissue_type: tissue
+cache_file: data/load_dataset_88581c8d4c15.h5ad</p>
+<h4>load file 12: <code>Agne_UC_CD8.raw_counts_stand.h5ad</code></h4>
+<pre><code>file_version: 2026-10-06 12:31:40.248831905
+</code></pre>
+<h4 id="remap_columns-11">remap_columns</h4>
+<p>function: remap_columns
+parameters:
+  column_map: {"Age": "age", "Chemistry": "chemistry", "Disease": "disease", "Donor": "donor", "Patient": "donor", "PatientID": "donor", "Sample": "sample_id", "SampleID": "sample_id", "Sex": "sex", "Tissue": "tissue_type", "assay": "chemistry", "cohort": "study", "condition": "disease", "condition_detail": "disease_detail", "dataset": "study", "detailed_context": "disease_detail", "diagnosis": "disease", "diagnosis_detail": "disease_detail", "disease_status": "disease", "disease_subtype": "disease_detail", "donor_id": "donor", "gender": "sex", "library_type": "chemistry", "organ": "tissue_type", "patient": "donor", "patient_id": "donor", "protocol": "chemistry", "sample": "sample_id", "sampleID": "sample_id", "sample_type": "tissue_type", "source_tissue": "tissue_type", "subtype": "disease_detail", "tissue": "tissue_type"}
+  defaults: {"assay_chemistry": "5'", "cell_sort": "CD8+", "cellranger": "3.0.2", "chemistry": "10x_5v1", "data_source": "in-house (Agne)", "disease": "UC", "disease_detail": "Ulcerative colitis (CD8-sorted)", "tissue_detail": "large intestine (colon)"}
+cache_file: data/remap_columns_1fb9d20cc976.h5ad</p>
+<p>remap_columns: no renames applied (targets already present or sources absent)</p>
+<p>Default applied: assay_chemistry = '5''</p>
+<p>Default applied: data_source = 'in-house (Agne)'</p>
+<p>Default applied: cell_sort = 'CD8+'</p>
+<p>Default applied: cellranger = '3.0.2'</p>
+<h4 id="qc_full-11">qc_full</h4>
+<p>function: qc_full
+parameters:
+  excluded_gene_patterns: null
+  expected_doublet_rate: 0.05
+  frac_treshold: 0.05
+  low_count_treshold: 1000
+  mad_outlier_var: 5
+  min_cells_per_gene: 20
+  mitochondria_cutoff_percentage: 8
+  name: Agne_UC_CD8_colon
+cache_file: data/qc_full_1132e9f03438.h5ad</p>
+<h4 id="load_dataset-12">load_dataset</h4>
+<p>function: load_dataset
+parameters:
+  filename: GSE173303.raw_counts_stand.h5ad
+  max_cells: 30000
+  study: Kim2022
+  tissue_type: null
+cache_file: data/load_dataset_8b588871ba0c.h5ad</p>
+<h4>load file 13: <code>GSE173303.raw_counts_stand.h5ad</code></h4>
+<pre><code>file_version: 2026-09-09 09:26:45.339106903
+</code></pre>
+<h4 id="remap_columns-12">remap_columns</h4>
+<p>function: remap_columns
+parameters:
+  column_map: {"Age": "age", "Chemistry": "chemistry", "Disease": "disease", "Donor": "donor", "Patient": "donor", "PatientID": "donor", "Sample": "sample_id", "SampleID": "sample_id", "Sex": "sex", "Tissue": "tissue_type", "assay": "chemistry", "cohort": "study", "condition": "disease", "condition_detail": "disease_detail", "dataset": "study", "detailed_context": "disease_detail", "diagnosis": "disease", "diagnosis_detail": "disease_detail", "disease_status": "disease", "disease_subtype": "disease_detail", "donor_id": "donor", "gender": "sex", "library_type": "chemistry", "organ": "tissue_type", "patient": "donor", "patient_id": "donor", "protocol": "chemistry", "sample": "sample_id", "sampleID": "sample_id", "sample_type": "tissue_type", "source_tissue": "tissue_type", "subtype": "disease_detail", "tissue": "tissue_type"}
+  defaults: {"assay_chemistry": "5'", "cellranger": "3.1.0", "chemistry": "10x_5v1", "data_source": "GEO GSE173303", "disease": "RA", "disease_detail": "CPI-induced rheumatoid arthritis"}
+cache_file: data/remap_columns_785bdffc751c.h5ad</p>
+<p>Remapped columns: tissue → tissue_type</p>
+<p>Default applied: assay_chemistry = '5''</p>
+<p>Default applied: data_source = 'GEO GSE173303'</p>
+<p>Default applied: cellranger = '3.1.0'</p>
+<h4 id="qc_full-12">qc_full</h4>
+<p>function: qc_full
+parameters:
+  excluded_gene_patterns: null
+  expected_doublet_rate: 0.05
+  frac_treshold: 0.05
+  low_count_treshold: 1000
+  mad_outlier_var: 5
+  min_cells_per_gene: 20
+  mitochondria_cutoff_percentage: 8
+  name: Kim2022_RA_synovial
+cache_file: data/qc_full_c599ef5c876c.h5ad</p>
+<h4 id="load_dataset-13">load_dataset</h4>
+<p>function: load_dataset
+parameters:
+  filename: GSE166489.raw_counts_stand.h5ad
+  max_cells: 30000
+  study: Ramaswamy2021
+  tissue_type: PBMC
+cache_file: data/load_dataset_298c2e72d149.h5ad</p>
+<h4>load file 14: <code>GSE166489.raw_counts_stand.h5ad</code></h4>
+<pre><code>file_version: 2026-09-09 09:28:01.893982155
+</code></pre>
+<h4 id="remap_columns-13">remap_columns</h4>
+<p>function: remap_columns
+parameters:
+  column_map: {"Age": "age", "Chemistry": "chemistry", "Disease": "disease", "Donor": "donor", "Patient": "donor", "PatientID": "donor", "Sample": "sample_id", "SampleID": "sample_id", "Sex": "sex", "Tissue": "tissue_type", "assay": "chemistry", "cohort": "study", "condition": "disease", "condition_detail": "disease_detail", "dataset": "study", "detailed_context": "disease_detail", "diagnosis": "disease", "diagnosis_detail": "disease_detail", "disease_status": "disease", "disease_subtype": "disease_detail", "donor_id": "donor", "gender": "sex", "library_type": "chemistry", "organ": "tissue_type", "patient": "donor", "patient_id": "donor", "protocol": "chemistry", "sample": "sample_id", "sampleID": "sample_id", "sample_type": "tissue_type", "source_tissue": "tissue_type", "subtype": "disease_detail", "tissue": "tissue_type"}
+  defaults: {"assay_chemistry": "5'", "cellranger": "3.1.0", "chemistry": "10x_5v1", "data_source": "GEO GSE166489", "disease": "MIS-C", "disease_detail": "Multisystem inflammatory syndrome in children"}
+cache_file: data/remap_columns_d691f4b8d949.h5ad</p>
+<p>remap_columns: no renames applied (targets already present or sources absent)</p>
+<p>Default applied: assay_chemistry = '5''</p>
+<p>Default applied: data_source = 'GEO GSE166489'</p>
+<p>Default applied: cellranger = '3.1.0'</p>
+<h4 id="qc_full-13">qc_full</h4>
+<p>function: qc_full
+parameters:
+  excluded_gene_patterns: null
+  expected_doublet_rate: 0.05
+  frac_treshold: 0.05
+  low_count_treshold: 1000
+  mad_outlier_var: 5
+  min_cells_per_gene: 20
+  mitochondria_cutoff_percentage: 8
+  name: Ramaswamy2021_MISC_PBMC
+cache_file: data/qc_full_fb7ae02f90c9.h5ad</p>
+<h4 id="load_dataset-14">load_dataset</h4>
+<p>function: load_dataset
+parameters:
+  filename: GSE212797.raw_counts_stand.h5ad
+  max_cells: 30000
+  study: Rahim2023
+  tissue_type: null
+cache_file: data/load_dataset_b01946291007.h5ad</p>
+<h4>load file 15: <code>GSE212797.raw_counts_stand.h5ad</code></h4>
+<pre><code>file_version: 2026-09-09 09:27:44.672885485
+</code></pre>
+<h4 id="remap_columns-14">remap_columns</h4>
+<p>function: remap_columns
+parameters:
+  column_map: {"Age": "age", "Chemistry": "chemistry", "Disease": "disease", "Donor": "donor", "Patient": "donor", "PatientID": "donor", "Sample": "sample_id", "SampleID": "sample_id", "Sex": "sex", "Tissue": "tissue_type", "assay": "chemistry", "cohort": "study", "condition": "disease", "condition_detail": "disease_detail", "dataset": "study", "detailed_context": "disease_detail", "diagnosis": "disease", "diagnosis_detail": "disease_detail", "disease_status": "disease", "disease_subtype": "disease_detail", "donor_id": "donor", "gender": "sex", "library_type": "chemistry", "organ": "tissue_type", "patient": "donor", "patient_id": "donor", "protocol": "chemistry", "sample": "sample_id", "sampleID": "sample_id", "sample_type": "tissue_type", "source_tissue": "tissue_type", "subtype": "disease_detail", "tissue": "tissue_type"}
+  defaults: {"assay_chemistry": "5'", "cell_sort": "CD8+ (author subset)", "cellranger": "3.0.2", "chemistry": "10x_5v1", "data_source": "GEO GSE212797", "disease": "HNSCC", "disease_detail": "Head and neck squamous cell carcinoma"}
+cache_file: data/remap_columns_778a02bbbaaa.h5ad</p>
+<p>Remapped columns: tissue → tissue_type</p>
+<p>Default applied: disease_detail = 'Head and neck squamous cell carcinoma'</p>
+<p>Default applied: assay_chemistry = '5''</p>
+<p>Default applied: data_source = 'GEO GSE212797'</p>
+<p>Default applied: cell_sort = 'CD8+ (author subset)'</p>
+<p>Default applied: cellranger = '3.0.2'</p>
+<h4 id="qc_full-14">qc_full</h4>
+<p>function: qc_full
+parameters:
+  excluded_gene_patterns: null
+  expected_doublet_rate: 0.05
+  frac_treshold: 0.05
+  low_count_treshold: 1000
+  mad_outlier_var: 5
+  min_cells_per_gene: 20
+  mitochondria_cutoff_percentage: 8
+  name: Rahim2023_HNSCC_LN
+cache_file: data/qc_full_67e289387828.h5ad</p>
+<h4 id="load_dataset-15">load_dataset</h4>
+<p>function: load_dataset
+parameters:
+  filename: GSE145370.raw_counts_stand.h5ad
+  max_cells: 30000
+  study: Zheng2020
+  tissue_type: null
+cache_file: data/load_dataset_b6a5b0f1faf0.h5ad</p>
+<h4>load file 16: <code>GSE145370.raw_counts_stand.h5ad</code></h4>
+<pre><code>file_version: 2026-09-09 09:27:06.096428821
+</code></pre>
+<h4 id="remap_columns-15">remap_columns</h4>
+<p>function: remap_columns
+parameters:
+  column_map: {"Age": "age", "Chemistry": "chemistry", "Disease": "disease", "Donor": "donor", "Patient": "donor", "PatientID": "donor", "Sample": "sample_id", "SampleID": "sample_id", "Sex": "sex", "Tissue": "tissue_type", "assay": "chemistry", "cohort": "study", "condition": "disease", "condition_detail": "disease_detail", "dataset": "study", "detailed_context": "disease_detail", "diagnosis": "disease", "diagnosis_detail": "disease_detail", "disease_status": "disease", "disease_subtype": "disease_detail", "donor_id": "donor", "gender": "sex", "library_type": "chemistry", "organ": "tissue_type", "patient": "donor", "patient_id": "donor", "protocol": "chemistry", "sample": "sample_id", "sampleID": "sample_id", "sample_type": "tissue_type", "source_tissue": "tissue_type", "subtype": "disease_detail", "tissue": "tissue_type"}
+  defaults: {"assay_chemistry": "5'", "cellranger": "3.1.0", "chemistry": "10x_5v1", "data_source": "GEO GSE145370", "disease": "ESCC", "disease_detail": "Esophageal squamous cell carcinoma", "tissue_detail": "esophagus"}
+cache_file: data/remap_columns_4c849e90f950.h5ad</p>
+<p>Remapped columns: tissue → tissue_type</p>
+<p>Default applied: assay_chemistry = '5''</p>
+<p>Default applied: data_source = 'GEO GSE145370'</p>
+<p>Default applied: cellranger = '3.1.0'</p>
+<h4 id="qc_full-15">qc_full</h4>
+<p>function: qc_full
+parameters:
+  excluded_gene_patterns: null
+  expected_doublet_rate: 0.05
+  frac_treshold: 0.05
+  low_count_treshold: 1000
+  mad_outlier_var: 5
+  min_cells_per_gene: 20
+  mitochondria_cutoff_percentage: 8
+  name: Zheng2020_ESCC_esophagus
+cache_file: data/qc_full_1d932dc974cd.h5ad</p>
+<h4 id="load_dataset-16">load_dataset</h4>
+<p>function: load_dataset
+parameters:
+  filename: GSE123813_bcc.raw_counts_stand.h5ad
+  max_cells: 30000
+  study: Yost2019_BCC
+  tissue_type: TIL
+cache_file: data/load_dataset_9d6c6bbbb7c8.h5ad</p>
+<h4>load file 17: <code>GSE123813_bcc.raw_counts_stand.h5ad</code></h4>
+<pre><code>file_version: 2026-09-09 09:26:22.517653508
+</code></pre>
+<h4 id="remap_columns-16">remap_columns</h4>
+<p>function: remap_columns
+parameters:
+  column_map: {"Age": "age", "Chemistry": "chemistry", "Disease": "disease", "Donor": "donor", "Patient": "donor", "PatientID": "donor", "Sample": "sample_id", "SampleID": "sample_id", "Sex": "sex", "Tissue": "tissue_type", "assay": "chemistry", "cohort": "study", "condition": "disease", "condition_detail": "disease_detail", "dataset": "study", "detailed_context": "disease_detail", "diagnosis": "disease", "diagnosis_detail": "disease_detail", "disease_status": "disease", "disease_subtype": "disease_detail", "donor_id": "donor", "gender": "sex", "library_type": "chemistry", "organ": "tissue_type", "patient": "donor", "patient_id": "donor", "protocol": "chemistry", "sample": "sample_id", "sampleID": "sample_id", "sample_type": "tissue_type", "source_tissue": "tissue_type", "subtype": "disease_detail", "tissue": "tissue_type"}
+  defaults: {"assay_chemistry": "5'", "cell_sort": "T cells (author-filtered)", "cellranger": "2.1.0", "chemistry": "10x_5v1", "data_source": "GEO GSE123813", "disease": "BCC", "disease_detail": "Basal cell carcinoma", "tissue_detail": "skin"}
+cache_file: data/remap_columns_8860ad004afb.h5ad</p>
+<p>remap_columns: no renames applied (targets already present or sources absent)</p>
+<p>Default applied: assay_chemistry = '5''</p>
+<p>Default applied: data_source = 'GEO GSE123813'</p>
+<p>Default applied: cell_sort = 'T cells (author-filtered)'</p>
+<p>Default applied: cellranger = '2.1.0'</p>
+<h4 id="qc_full-16">qc_full</h4>
+<p>function: qc_full
+parameters:
+  excluded_gene_patterns: null
+  expected_doublet_rate: 0.05
+  frac_treshold: 0.05
+  low_count_treshold: 1000
+  mad_outlier_var: 5
+  min_cells_per_gene: 20
+  mitochondria_cutoff_percentage: 8
+  name: Yost2019_BCC_skin
+cache_file: data/qc_full_733dde5634ef.h5ad</p>
+<h4 id="load_dataset-17">load_dataset</h4>
+<p>function: load_dataset
+parameters:
+  filename: GSE123813_scc.raw_counts_stand.h5ad
+  max_cells: 30000
+  study: Yost2019_SCC
+  tissue_type: TIL
+cache_file: data/load_dataset_e297e60f3fbb.h5ad</p>
+<h4>load file 18: <code>GSE123813_scc.raw_counts_stand.h5ad</code></h4>
+<pre><code>file_version: 2026-09-09 09:26:25.301830821
+</code></pre>
+<h4 id="remap_columns-17">remap_columns</h4>
+<p>function: remap_columns
+parameters:
+  column_map: {"Age": "age", "Chemistry": "chemistry", "Disease": "disease", "Donor": "donor", "Patient": "donor", "PatientID": "donor", "Sample": "sample_id", "SampleID": "sample_id", "Sex": "sex", "Tissue": "tissue_type", "assay": "chemistry", "cohort": "study", "condition": "disease", "condition_detail": "disease_detail", "dataset": "study", "detailed_context": "disease_detail", "diagnosis": "disease", "diagnosis_detail": "disease_detail", "disease_status": "disease", "disease_subtype": "disease_detail", "donor_id": "donor", "gender": "sex", "library_type": "chemistry", "organ": "tissue_type", "patient": "donor", "patient_id": "donor", "protocol": "chemistry", "sample": "sample_id", "sampleID": "sample_id", "sample_type": "tissue_type", "source_tissue": "tissue_type", "subtype": "disease_detail", "tissue": "tissue_type"}
+  defaults: {"assay_chemistry": "5'", "cell_sort": "T cells (author-filtered)", "cellranger": "2.1.0", "chemistry": "10x_5v1", "data_source": "GEO GSE123813", "disease": "SCC", "disease_detail": "Squamous cell carcinoma", "tissue_detail": "skin"}
+cache_file: data/remap_columns_438138278f69.h5ad</p>
+<p>remap_columns: no renames applied (targets already present or sources absent)</p>
+<p>Default applied: assay_chemistry = '5''</p>
+<p>Default applied: data_source = 'GEO GSE123813'</p>
+<p>Default applied: cell_sort = 'T cells (author-filtered)'</p>
+<p>Default applied: cellranger = '2.1.0'</p>
+<h4 id="qc_full-17">qc_full</h4>
+<p>function: qc_full
+parameters:
+  excluded_gene_patterns: null
+  expected_doublet_rate: 0.05
+  frac_treshold: 0.05
+  low_count_treshold: 1000
+  mad_outlier_var: 5
+  min_cells_per_gene: 20
+  mitochondria_cutoff_percentage: 8
+  name: Yost2019_SCC_skin
+cache_file: data/qc_full_57a037e9616e.h5ad</p>
+<h4 id="load_dataset-18">load_dataset</h4>
+<p>function: load_dataset
+parameters:
+  filename: GSE156728_BC.raw_counts_stand.h5ad
+  max_cells: 30000
+  study: Zheng2021
+  tissue_type: null
+cache_file: data/load_dataset_eeb21055bbc7.h5ad</p>
+<h4>load file 19: <code>GSE156728_BC.raw_counts_stand.h5ad</code></h4>
+<pre><code>file_version: 2026-09-21 14:19:14.784861271
+</code></pre>
+<h4 id="remap_columns-18">remap_columns</h4>
+<p>function: remap_columns
+parameters:
+  column_map: {"Age": "age", "Chemistry": "chemistry", "Disease": "disease", "Donor": "donor", "Patient": "donor", "PatientID": "donor", "Sample": "sample_id", "SampleID": "sample_id", "Sex": "sex", "Tissue": "tissue_type", "assay": "chemistry", "cohort": "study", "condition": "disease", "condition_detail": "disease_detail", "dataset": "study", "detailed_context": "disease_detail", "diagnosis": "disease", "diagnosis_detail": "disease_detail", "disease_status": "disease", "disease_subtype": "disease_detail", "donor_id": "donor", "gender": "sex", "library_type": "chemistry", "organ": "tissue_type", "patient": "donor", "patient_id": "donor", "protocol": "chemistry", "sample": "sample_id", "sampleID": "sample_id", "sample_type": "tissue_type", "source_tissue": "tissue_type", "subtype": "disease_detail", "tissue": "tissue_type"}
+  defaults: {"assay_chemistry": "5'", "cellranger": "3", "chemistry": "10x_5v3", "data_source": "GEO GSE156728", "disease": "BC", "disease_detail": "Breast cancer", "tissue_detail": "breast"}
+cache_file: data/remap_columns_cb7c17fd4b9e.h5ad</p>
+<p>Remapped columns: tissue → tissue_type</p>
+<p>Default applied: assay_chemistry = '5''</p>
+<p>Default applied: data_source = 'GEO GSE156728'</p>
+<p>Default applied: cellranger = '3'</p>
+<h4 id="qc_full-18">qc_full</h4>
+<p>function: qc_full
+parameters:
+  excluded_gene_patterns: null
+  expected_doublet_rate: 0.05
+  frac_treshold: 0.05
+  low_count_treshold: 1000
+  mad_outlier_var: 5
+  min_cells_per_gene: 20
+  mitochondria_cutoff_percentage: 8
+  name: Zheng2021_BC
+cache_file: data/qc_full_ddb0f9255b4f.h5ad</p>
+<hr>
+<h1 id="2-integration-combined">2. Integration 'combined'</h1>
+<hr>
+<h2 id="21-cohort-overview">2.1. Cohort overview</h2>
+<p><a href="figures/cohort_overview_ddb0f9255b4f.png"><img src="figures/cohort_overview_ddb0f9255b4f.png" width="50%"></a></p>
+<p><em>Note: Showing at most 10 rows and 10 columns from data with 19 rows and 5 columns.</em></p>
+<table>
+<thead>
+<tr>
+<th>index</th>
+<th>dataset</th>
+<th>n_cells</th>
+<th>tissue</th>
+<th>study</th>
+<th>n_diseases</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>Ali2023_BC_OC</td>
+<td>28180</td>
+<td>PBMC</td>
+<td>Ali2023</td>
+<td>2</td>
+</tr>
+<tr>
+<td>1</td>
+<td>Wong2022_PrC_prostate</td>
+<td>29180</td>
+<td>prostate</td>
+<td>Wong2022</td>
+<td>1</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Lee2022_pancreas</td>
+<td>27125</td>
+<td>tissue</td>
+<td>GSE165045</td>
+<td>2</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Chow2023_EC_PBMC</td>
+<td>25032</td>
+<td>PBMC</td>
+<td>Chow2023</td>
+<td>1</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Borcherding2021_ccRCC</td>
+<td>24323</td>
+<td>PBMC</td>
+<td>Borcherding2021</td>
+<td>1</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Agne_CD_ileum</td>
+<td>4079</td>
+<td>tissue</td>
+<td>Agne_CD</td>
+<td>2</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Martin_CD_ileum</td>
+<td>23824</td>
+<td>tissue</td>
+<td>Martin_CD</td>
+<td>1</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Luoma2020_Colitis_colon</td>
+<td>26897</td>
+<td>tissue</td>
+<td>Luoma2020</td>
+<td>2</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Agne_dev_intestine</td>
+<td>29334</td>
+<td>tissue</td>
+<td>Agne_developmental</td>
+<td>1</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Agne_polyp_colon</td>
+<td>18879</td>
+<td>tissue</td>
+<td>Agne_polyp</td>
+<td>2</td>
+</tr>
+</tbody>
+</table>
+<p>Total: 418,579 cells · 19 datasets · 19 disease values</p>
+<hr>
+<h2 id="22-dataset-merge">2.2. Dataset merge</h2>
+<p>Ali2023_BC_OC: 16022 genes, 12497 ENSG-keyed (symbol_col=gene_name); sample ['AL627309.1', 'AL627309.5', 'ENSG00000237491']</p>
+<p>Wong2022_PrC_prostate: 20886 genes, 15740 ENSG-keyed (symbol_col=gene_name); sample ['AL627309.1', 'AL627309.5', 'AP006222.2']</p>
+<p>Lee2022_pancreas: 16793 genes, 13560 ENSG-keyed (symbol_col=gene_name); sample ['AL669831.5', 'ENSG00000177757', 'ENSG00000225880']</p>
+<p>Chow2023_EC_PBMC: 15840 genes, 12523 ENSG-keyed (symbol_col=gene_name); sample ['AL627309.1', 'AL627309.5', 'ENSG00000237491']</p>
+<p>Borcherding2021_ccRCC: 15689 genes, 12090 ENSG-keyed (symbol_col=gene_name); sample ['FO538757.2', 'AP006222.2', 'RP4-669L17.10']</p>
+<p>Agne_CD_ileum: 13207 genes, 11147 ENSG-keyed (symbol_col=gene_name); sample ['ENSG00000237491', 'ENSG00000228794', 'ENSG00000225880']</p>
+<p>Martin_CD_ileum: 14697 genes, 12035 ENSG-keyed (symbol_col=gene_name); sample ['AL669831.5', 'ENSG00000225880', 'ENSG00000230368']</p>
+<p>Luoma2020_Colitis_colon: 14918 genes, 12037 ENSG-keyed (symbol_col=gene_name); sample ['AL627309.1', 'AL669831.5', 'ENSG00000225880']</p>
+<p>Agne_dev_intestine: 18000 genes, 13469 ENSG-keyed (symbol_col=gene_name); sample ['AL627309.1', 'AL627309.5', 'ENSG00000237491']</p>
+<p>Agne_polyp_colon: 15234 genes, 11813 ENSG-keyed (symbol_col=gene_name); sample ['AL627309.5', 'ENSG00000237491', 'ENSG00000228794']</p>
+<p>Agne_Celiac_ds2_CD45_duodenum: 12607 genes, 10580 ENSG-keyed (symbol_col=gene_name); sample ['AL669831.5', 'ENSG00000225880', 'ENSG00000230368']</p>
+<p>Agne_UC_CD8_colon: 14196 genes, 10944 ENSG-keyed (symbol_col=gene_name); sample ['FO538757.2', 'AP006222.2', 'RP4-669L17.10']</p>
+<p>Kim2022_RA_synovial: 15797 genes, 12570 ENSG-keyed (symbol_col=gene_name); sample ['AL627309.1', 'AL669831.5', 'ENSG00000225880']</p>
+<p>Ramaswamy2021_MISC_PBMC: 15267 genes, 12323 ENSG-keyed (symbol_col=gene_name); sample ['AL627309.1', 'AL669831.5', 'ENSG00000225880']</p>
+<p>Rahim2023_HNSCC_LN: 10452 genes, 9449 ENSG-keyed (symbol_col=gene_name); sample ['ENSG00000228794', 'ENSG00000225880', 'ENSG00000188976']</p>
+<p>Zheng2020_ESCC_esophagus: 16581 genes, 13278 ENSG-keyed (symbol_col=gene_name); sample ['AL669831.5', 'ENSG00000225880', 'ENSG00000188976']</p>
+<p>Yost2019_BCC_skin: 14834 genes, 11660 ENSG-keyed (symbol_col=gene_name); sample ['FO538757.2', 'AP006222.2', 'RP11-206L10.9']</p>
+<p>Yost2019_SCC_skin: 14144 genes, 11108 ENSG-keyed (symbol_col=gene_name); sample ['RP11-34P13.7', 'FO538757.2', 'AP006222.2']</p>
+<p>Zheng2021_BC: 12358 genes, 10103 ENSG-keyed (symbol_col=gene_name); sample ['FO538757.2', 'RP11-206L10.9', 'ENSG00000225880']</p>
+<p>Union gene universe across 19 datasets: 26850 genes</p>
+<h4>load file 20: <code>inhibitory_receptor_list_new.csv</code></h4>
+<pre><code>file_version: 2026-05-13 15:49:25.468477661
+</code></pre>
+<h4>load file 21: <code>state_markers.csv</code></h4>
+<pre><code>file_version: 2026-04-21 10:55:48.543853355
+</code></pre>
+<p>Coverage filter: keeping 12730 / 26850 genes (measured in ≥13/19 datasets; 14 whitelist-rescued)</p>
+<p>Lineage markers present in merged set: ['CD3D', 'CD3E', 'CD3G', 'CD8A', 'CD8B', 'CD8B2', 'CD4', 'TRDC', 'TRGC1', 'TRGC2'] (of ['CD3D', 'CD3E', 'CD3G', 'CD8A', 'CD8B', 'CD8B2', 'CD4', 'TRDC', 'TRGC1', 'TRGC2'])</p>
+<p>Merged 19 datasets: 418579 cells × 12730 genes</p>
+<p>tissue_type: {'tissue': 160052, 'PBMC': 111060, 'TIL': 53555, 'prostate': 29180, 'esophagus': 27299, 'kidney': 11271, 'synovial fluid': 10006, 'breast': 8047, 'mouth/throat': 6636, 'lymph_node': 1437, 'ovary': 36}</p>
+<p>study: {'Agne_developmental': 29334, 'GSE173303': 29189, 'Wong2022': 29180, 'Yost2019_BCC': 28483, 'Ali2023': 28180, 'Zheng2020': 27299, 'GSE165045': 27125, 'Luoma2020': 26897, 'GSE166489': 26688, 'Yost2019_SCC': 25072, 'Chow2023': 25032, 'Borcherding2021': 24323, 'Martin_CD': 23824, 'Agne_polyp': 18879, 'Agne_UC_CD8': 16971, 'Agne_Celiac_ds2': 12943, 'Rahim2023': 8073, 'Zheng2021': 7008, 'Agne_CD': 4079}</p>
+<p>source: {'Agne_dev_intestine': 29334, 'Kim2022_RA_synovial': 29189, 'Wong2022_PrC_prostate': 29180, 'Yost2019_BCC_skin': 28483, 'Ali2023_BC_OC': 28180, 'Zheng2020_ESCC_esophagus': 27299, 'Lee2022_pancreas': 27125, 'Luoma2020_Colitis_colon': 26897, 'Ramaswamy2021_MISC_PBMC': 26688, 'Yost2019_SCC_skin': 25072, 'Chow2023_EC_PBMC': 25032, 'Borcherding2021_ccRCC': 24323, 'Martin_CD_ileum': 23824, 'Agne_polyp_colon': 18879, 'Agne_UC_CD8_colon': 16971, 'Agne_Celiac_ds2_CD45_duodenum': 12943, 'Rahim2023_HNSCC_LN': 8073, 'Zheng2021_BC': 7008, 'Agne_CD_ileum': 4079}</p>
+<p>disease: {'H': 81802, 'BC': 32480, 'RA': 29189, 'PC': 29180, 'BCC': 28483, 'CrD': 27641, 'ESCC': 27299, 'SCC': 25072, 'EC': 25032, 'ccRCC': 24323, 'CP': 22996, 'pcancer': 11636, 'CeD': 11115, 'Colitis': 10059, 'UC': 9851, 'MIS-C': 8158, 'HNSCC': 8073, 'Recovered MIS-C': 3482, 'OC': 2708}</p>
+<h4 id="normalise">normalise</h4>
+<p>function: normalise
+parameters: {}
+cache_file: data/normalise_6d2cb4da71aa.h5ad</p>
+<hr>
+<h2 id="23-t-cell-selection-cd3-all-subtypes">2.3. T cell selection (CD3+; all subtypes)</h2>
+<h4 id="score_and_select_t_cells">score_and_select_t_cells</h4>
+<p>function: score_and_select_t_cells
+parameters: {}
+cache_file: data/score_and_select_t_cells_1906005890fa.h5ad</p>
+<p>Calculated marker score <strong>cd3_score</strong> from genes: CD3G, CD3D, CD3E</p>
+<p>Calculated marker score <strong>cd8_score</strong> from genes: CD8A, CD8B, CD8B2</p>
+<p>Calculated marker score <strong>cd4_score</strong> from genes: CD4</p>
+<p>Calculated marker score <strong>NK cells_score</strong> from genes: NKG7, GNLY, KLRD1, NCAM1</p>
+<p>Calculated marker score <strong>B cells_score</strong> from genes: CD79A, MS4A1, CD19</p>
+<p>Calculated marker score <strong>Macrophages_score</strong> from genes: CD68, CSF1R, MRC1</p>
+<p>Calculated marker score <strong>Fibroblasts_score</strong> from genes: COL1A1</p>
+<p><a href="figures/t_cell_selection_scores_1906005890fa.png"><img src="figures/t_cell_selection_scores_1906005890fa.png" width="50%"></a></p>
+<p>T cell selection (CD3+): 418579 → 178281 cells</p>
+<hr>
+<h1 id="3-combined-cd8-lineage">3. combined: CD8 lineage</h1>
+<h4 id="select_cd8_cells">select_cd8_cells</h4>
+<p>function: select_cd8_cells
+parameters: {}
+cache_file: data/select_cd8_cells_1fab74afe22a.h5ad</p>
+<p>CD8 subset: 78347 / 178281 cells (43.9%)</p>
+<p>tissue_type: {'tissue': 31949, 'TIL': 16333, 'PBMC': 15105, 'esophagus': 3264, 'breast': 2796, 'prostate': 2587, 'synovial fluid': 2277, 'kidney': 1981, 'mouth/throat': 1505, 'lymph_node': 541, 'ovary': 9}</p>
+<hr>
+<h1 id="4-combined_cd8-lineage-full-processing">4. COMBINED_CD8 lineage: full processing</h1>
+<h4 id="normalise-1">normalise</h4>
+<p>function: normalise
+parameters: {}
+cache_file: data/normalise_0772afa251ce.h5ad</p>
+<h4>load file 22: <code>inhibitory_receptor_list_new.csv</code></h4>
+<pre><code>file_version: 2026-05-13 15:49:25.468477661
+</code></pre>
+<h4 id="feature_selection_full">feature_selection_full</h4>
+<p>function: feature_selection_full
+parameters:
+  batch_key: study
+  display_top_n_genes: 20
+  marker_file: state_markers.csv
+  n_top_genes: 5000
+  old_seurat: true
+  whitelist_genes: ["gene", "PDCD1", "BTLA", "CD200R1", "CTLA4", "LAG3", "TIGIT", "HAVCR2", "CLEC12A", "CLEC12B", "CLEC1A", "CLEC1B", "CLEC4A", "CLEC8A", "CLEC9A", "FCRL2", "FCRL3", "FCRL4", "FCRL5", "FCRL6", "FCGR2A", "FCGR2B", "FCGR2C", "KIR2DL1", "KIR2DL2", "KIR2DL3", "KIR2DL4", "KIR2DL5A", "KIR3DL1", "KIR3DL2", "KIR3DL3", "KLRB1", "KLRC1", "KLRF2", "KLRG1", "LILRB1", "LILRB2", "LILRB3", "LILRB4", "LILRB5", "CD72", "CD99L2", "CEACAM1", "MPIG6B", "LAIR1", "NCR2", "PECAM1", "PILRA", "SIRPA", "VSIR", "VSTM1", "VSTM4", "CD22", "CD33", "SIGLEC10", "SIGLEC11", "SIGLEC12", "SIGLEC5", "SIGLEC6", "SIGLEC7", "SIGLEC8", "SIGLEC9", "SLAMF1", "CD244", "LY9", "CD84", "SLAMF6", "SLAMF7", "CD5", "CD3D", "CD3E", "CD3G", "CD8A", "CD8B", "CD8B2", "CD4", "TRDC", "TRGC1", "TRGC2", "NCAM1", "NKG7", "GNLY", "KLRD1", "CD19", "MS4A1", "CD79A", "CD68", "CSF1R", "MRC1", "COL1A1", "COL1A2", "FAP"]
+cache_file: data/feature_selection_full_270fb91dfc3c.h5ad</p>
+<h4 id="pca_umap">pca_umap</h4>
+<p>function: pca_umap
+parameters:
+  name: combined_cd8
+cache_file: data/pca_umap_7ac4947d7c38.h5ad</p>
+<hr>
+<h2 id="41-pca-umap-pre-scvi-reference">4.1. PCA UMAP (pre-scVI reference)</h2>
+<p><a href="figures/combined_cd8_umap_pca_pre_integration_7ac4947d7c38.png"><img src="figures/combined_cd8_umap_pca_pre_integration_7ac4947d7c38.png" width="50%"></a></p>
+<h4 id="integrate_scanorama">integrate_scanorama</h4>
+<p>function: integrate_scanorama
+parameters:
+  batch_cols: ["study", "assay_chemistry"]
+  name: combined_cd8
+cache_file: data/integrate_scanorama_8e03fe6195ce.h5ad</p>
+<hr>
+<h2 id="42-scanorama-integration">4.2. Scanorama integration</h2>
+<p>assay_chemistry (5' / 3' / 3'M): {"5'": 72223, "3'M": 3886, "3'": 2238}</p>
+<p>batches (study × assay_chemistry): {"Luoma2020|5'": 8926, "Yost2019_SCC|5'": 8876, "Agne_UC_CD8|5'": 8106, "Yost2019_BCC|5'": 7457, "Ali2023|5'": 5837, "GSE173303|5'": 5112, "Agne_Celiac_ds2|5'": 4783, "GSE166489|5'": 4182, "Zheng2020|5'": 3264, "GSE165045|5'": 2754, "Wong2022|5'": 2587, "Zheng2021|5'": 2514, "Agne_developmental|3'M": 2403, "Borcherding2021|5'": 2382, "Martin_CD|3'": 2238, "Chow2023|5'": 2141, "Rahim2023|5'": 2046, "Agne_polyp|3'M": 1483, "Agne_CD|5'": 1256}</p>
+<p>Split into 19 batches: {"Ali2023|5'": 5837, "Wong2022|5'": 2587, "GSE165045|5'": 2754, "Chow2023|5'": 2141, "Borcherding2021|5'": 2382, "Agne_CD|5'": 1256, "Martin_CD|3'": 2238, "Luoma2020|5'": 8926, "Agne_developmental|3'M": 2403, "Agne_polyp|3'M": 1483, "Agne_Celiac_ds2|5'": 4783, "Agne_UC_CD8|5'": 8106, "GSE173303|5'": 5112, "GSE166489|5'": 4182, "Rahim2023|5'": 2046, "Zheng2020|5'": 3264, "Yost2019_BCC|5'": 7457, "Yost2019_SCC|5'": 8876, "Zheng2021|5'": 2514}</p>
+<p>Integration embedding obsm['X_integrated']: (78347, 30)</p>
+<p>Stored layers['integrated_normalized_log1p']: Scanorama-corrected log-scale, range [-0.0802, 0.2435]</p>
+<h4 id="umap_integrated">umap_integrated</h4>
+<p>function: umap_integrated
+parameters:
+  name: combined_cd8
+cache_file: data/umap_integrated_9fd20a4ccc48.h5ad</p>
+<hr>
+<h2 id="43-umap-on-integration-embedding-x_integrated">4.3. UMAP on integration embedding (X_integrated)</h2>
+<p>Leiden clusters: 13</p>
+<hr>
+<h2 id="44-combined_cd8-integration-comparison-pca-vs-integrated-umap">4.4. COMBINED_CD8: integration comparison (PCA vs integrated UMAP)</h2>
+<p><a href="figures/combined_cd8_umap_pca_vs_integrated_before_9fd20a4ccc48.png"><img src="figures/combined_cd8_umap_pca_vs_integrated_before_9fd20a4ccc48.png" width="50%"></a></p>
+<p><a href="figures/combined_cd8_umap_pca_vs_integrated_after_9fd20a4ccc48.png"><img src="figures/combined_cd8_umap_pca_vs_integrated_after_9fd20a4ccc48.png" width="50%"></a></p>
+<hr>
+<h2 id="45-combined_cd8-state-labeling">4.5. COMBINED_CD8: state labeling</h2>
+<h4 id="label_states">label_states</h4>
+<p>function: label_states
+parameters:
+  marker_file: state_markers.csv
+cache_file: data/label_states_5dc5b4a8c776.h5ad</p>
+<h4>load file 23: <code>state_markers.csv</code></h4>
+<pre><code>file_version: 2026-04-21 10:55:48.543853355
+</code></pre>
+<h3 id="451-labeling-states-based-on-markers">4.5.1. Labeling states based on markers:</h3>
+<table>
+<thead>
+<tr>
+<th>cytotoxic</th>
+<th>effector</th>
+<th>exhausted</th>
+<th>naive/memory</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>IFNG1</td>
+<td>RORC</td>
+<td>TOX</td>
+<td>ID3</td>
+</tr>
+<tr>
+<td>PRF1</td>
+<td>TBX21</td>
+<td>ENTPD1</td>
+<td>CCR7</td>
+</tr>
+<tr>
+<td>GZMA</td>
+<td>CX3CR1</td>
+<td>BATF</td>
+<td>SELL</td>
+</tr>
+<tr>
+<td>GZMB</td>
+<td>RORA</td>
+<td>LAG3</td>
+<td>CXCR3</td>
+</tr>
+<tr>
+<td>GNLY</td>
+<td>ZEB2</td>
+<td>TIGIT</td>
+<td>LEF1</td>
+</tr>
+<tr>
+<td></td>
+<td>KLRG1</td>
+<td>TOX2</td>
+<td>TCF7</td>
+</tr>
+<tr>
+<td></td>
+<td>ID2</td>
+<td>PDCD1</td>
+<td>ZEB1</td>
+</tr>
+<tr>
+<td></td>
+<td>PRDM1</td>
+<td>TRIB1</td>
+<td>CD28</td>
+</tr>
+<tr>
+<td></td>
+<td>BHLHE40</td>
+<td>CTLA4</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>State marker genes in dataset: 30 present, 1 missing</p>
+<p>Omitted state markers: IFNG1</p>
+<h3 id="452-assigned-state-labels">4.5.2. Assigned state labels:</h3>
+<table>
+<thead>
+<tr>
+<th>state</th>
+<th>n_cells</th>
+<th>pct_cells</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>cytotoxic</td>
+<td>31736</td>
+<td>40.50</td>
+</tr>
+<tr>
+<td>naive/memory</td>
+<td>21299</td>
+<td>27.20</td>
+</tr>
+<tr>
+<td>effector</td>
+<td>14234</td>
+<td>18.20</td>
+</tr>
+<tr>
+<td>exhausted</td>
+<td>11078</td>
+<td>14.10</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="46-combined_cd8-sanity-check-lineage-scores">4.6. COMBINED_CD8: sanity check lineage scores</h2>
+<p><a href="figures/combined_cd8_sanity_check_scores_5dc5b4a8c776.png"><img src="figures/combined_cd8_sanity_check_scores_5dc5b4a8c776.png" width="50%"></a></p>
+<hr>
+<h2 id="47-combined_cd8-overview-umap">4.7. COMBINED_CD8: overview UMAP</h2>
+<p><a href="figures/umap_plot_combined_cd8_overview_5dc5b4a8c776.png"><img src="figures/umap_plot_combined_cd8_overview_5dc5b4a8c776.png" width="50%"></a></p>
+<hr>
+<h2 id="48-combined_cd8-standalone-disease-umap">4.8. COMBINED_CD8: standalone disease UMAP</h2>
+<p><a href="figures/combined_cd8_umap_disease_5dc5b4a8c776.png"><img src="figures/combined_cd8_umap_disease_5dc5b4a8c776.png" width="50%"></a></p>
+<p><a href="figures/combined_cd8_umap_disease_detail_5dc5b4a8c776.png"><img src="figures/combined_cd8_umap_disease_detail_5dc5b4a8c776.png" width="50%"></a></p>
+<hr>
+<h2 id="49-combined_cd8-individual-state-marker-gene-umaps">4.9. COMBINED_CD8: individual state-marker gene UMAPs</h2>
+<h4>load file 24: <code>state_markers.csv</code></h4>
+<pre><code>file_version: 2026-04-21 10:55:48.543853355
+</code></pre>
+<p>Warning: no genes matched for score <strong>marker_IFNG1</strong> in layer 'log1p' — column set to NaN</p>
+<p>Calculated marker score <strong>marker_PRF1</strong> from genes: PRF1</p>
+<p>Calculated marker score <strong>marker_GZMA</strong> from genes: GZMA</p>
+<p>Calculated marker score <strong>marker_GZMB</strong> from genes: GZMB</p>
+<p>Calculated marker score <strong>marker_GNLY</strong> from genes: GNLY</p>
+<p>Calculated marker score <strong>marker_RORC</strong> from genes: RORC</p>
+<p>Calculated marker score <strong>marker_TBX21</strong> from genes: TBX21</p>
+<p>Calculated marker score <strong>marker_CX3CR1</strong> from genes: CX3CR1</p>
+<p>Calculated marker score <strong>marker_RORA</strong> from genes: RORA</p>
+<p>Calculated marker score <strong>marker_ZEB2</strong> from genes: ZEB2</p>
+<p>Calculated marker score <strong>marker_KLRG1</strong> from genes: KLRG1</p>
+<p>Calculated marker score <strong>marker_ID2</strong> from genes: ID2</p>
+<p>Calculated marker score <strong>marker_PRDM1</strong> from genes: PRDM1</p>
+<p>Calculated marker score <strong>marker_BHLHE40</strong> from genes: BHLHE40</p>
+<p>Calculated marker score <strong>marker_TOX</strong> from genes: TOX</p>
+<p>Calculated marker score <strong>marker_ENTPD1</strong> from genes: ENTPD1</p>
+<p>Calculated marker score <strong>marker_BATF</strong> from genes: BATF</p>
+<p>Calculated marker score <strong>marker_LAG3</strong> from genes: LAG3</p>
+<p>Calculated marker score <strong>marker_TIGIT</strong> from genes: TIGIT</p>
+<p>Calculated marker score <strong>marker_TOX2</strong> from genes: TOX2</p>
+<p>Calculated marker score <strong>marker_PDCD1</strong> from genes: PDCD1</p>
+<p>Calculated marker score <strong>marker_TRIB1</strong> from genes: TRIB1</p>
+<p>Calculated marker score <strong>marker_CTLA4</strong> from genes: CTLA4</p>
+<p>Calculated marker score <strong>marker_ID3</strong> from genes: ID3</p>
+<p>Calculated marker score <strong>marker_CCR7</strong> from genes: CCR7</p>
+<p>Calculated marker score <strong>marker_SELL</strong> from genes: SELL</p>
+<p>Calculated marker score <strong>marker_CXCR3</strong> from genes: CXCR3</p>
+<p>Calculated marker score <strong>marker_LEF1</strong> from genes: LEF1</p>
+<p>Calculated marker score <strong>marker_TCF7</strong> from genes: TCF7</p>
+<p>Calculated marker score <strong>marker_ZEB1</strong> from genes: ZEB1</p>
+<p>Calculated marker score <strong>marker_CD28</strong> from genes: CD28</p>
+<p><a href="figures/combined_cd8_umap_state_markers_7fab62d5e576.png"><img src="figures/combined_cd8_umap_state_markers_7fab62d5e576.png" width="50%"></a></p>
+<hr>
+<h1 id="5-combined_cd8-cell-type-and-metadata-umaps">5. COMBINED_CD8: cell type and metadata UMAPs</h1>
+<h4>load file 25: <code>inhibitory_receptor_list_new.csv</code></h4>
+<pre><code>file_version: 2026-05-13 15:49:25.468477661
+</code></pre>
+<hr>
+<h2 id="51-marker-scores-raw-log1p-and-integrated-integrated_normalized_log1p">5.1. Marker scores: raw (log1p) and integrated (integrated_normalized_log1p)</h2>
+<p>Calculated marker score <strong>cd3_score</strong> from genes: CD3G, CD3D, CD3E</p>
+<p>Calculated marker score <strong>cd3_score_integrated</strong> from genes: CD3G, CD3D, CD3E</p>
+<p>Calculated marker score <strong>cd8_score</strong> from genes: CD8A, CD8B, CD8B2</p>
+<p>Calculated marker score <strong>cd8_score_integrated</strong> from genes: CD8A, CD8B, CD8B2</p>
+<p>Calculated marker score <strong>cd4_score</strong> from genes: CD4</p>
+<p>Calculated marker score <strong>cd4_score_integrated</strong> from genes: CD4</p>
+<p>Calculated marker score <strong>gd_score</strong> from genes: TRGC1, TRDC, TRGC2</p>
+<p>Calculated marker score <strong>gd_score_integrated</strong> from genes: TRGC1, TRDC, TRGC2</p>
+<p>Calculated marker score <strong>NK cells_score</strong> from genes: NKG7, GNLY, KLRD1, NCAM1</p>
+<p>Calculated marker score <strong>NK cells_score_integrated</strong> from genes: NKG7, GNLY, KLRD1, NCAM1</p>
+<p>Calculated marker score <strong>B cells_score</strong> from genes: CD79A, MS4A1, CD19</p>
+<p>Calculated marker score <strong>B cells_score_integrated</strong> from genes: CD79A, MS4A1, CD19</p>
+<p>Calculated marker score <strong>Macrophages_score</strong> from genes: CD68, CSF1R, MRC1</p>
+<p>Calculated marker score <strong>Macrophages_score_integrated</strong> from genes: CD68, CSF1R, MRC1</p>
+<p>Calculated marker score <strong>Fibroblasts_score</strong> from genes: COL1A1</p>
+<p>Calculated marker score <strong>Fibroblasts_score_integrated</strong> from genes: COL1A1</p>
+<p>Calculated marker score <strong>inhibitory_receptor_score</strong> from genes: CD22, SLAMF7, CD84, FCGR2B, CEACAM1, PILRA, LAG3, CD99L2, CD33, VSIR, CD5, CLEC4A, KLRB1, SLAMF1, CD244, LY9, SIGLEC9, KLRC1, HAVCR2, CD72, KLRG1, SIGLEC10, FCGR2A, FCRL3, SLAMF6, CTLA4, CD200R1, CLEC1B, SIGLEC7, CLEC12A, FCRL6, TIGIT, BTLA, SIRPA, PECAM1, KIR2DL1, KIR2DL3, KIR2DL4, KIR3DL1, KIR3DL2, nan, LAIR1, LILRB1, LILRB2, LILRB3, LILRB4, nan, MPIG6B, PDCD1, nan, nan</p>
+<p>Calculated marker score <strong>inhibitory_receptor_score_integrated</strong> from genes: CD22, SLAMF7, CD84, FCGR2B, CEACAM1, PILRA, LAG3, CD99L2, CD33, VSIR, CD5, CLEC4A, KLRB1, SLAMF1, CD244, LY9, SIGLEC9, KLRC1, HAVCR2, CD72, KLRG1, SIGLEC10, FCGR2A, FCRL3, SLAMF6, CTLA4, CD200R1, CLEC1B, SIGLEC7, CLEC12A, FCRL6, TIGIT, BTLA, SIRPA, PECAM1, KIR2DL1, KIR2DL3, KIR2DL4, KIR3DL1, KIR3DL2, nan, LAIR1, LILRB1, LILRB2, LILRB3, LILRB4, nan, MPIG6B, PDCD1, nan, nan</p>
+<hr>
+<h2 id="52-gamma-delta-score-umap-sanity-check">5.2. Gamma-delta score UMAP (sanity check)</h2>
+<p><a href="figures/combined_cd8_umap_gd_score_c342a86b362c.png"><img src="figures/combined_cd8_umap_gd_score_c342a86b362c.png" width="50%"></a></p>
+<hr>
+<h2 id="53-annotation-umap-integrated-embedding-vs-pca-raw-embedding">5.3. Annotation UMAP: integrated embedding vs PCA (raw embedding)</h2>
+<p><a href="figures/combined_cd8_umap_celltypes_integrated_c342a86b362c.png"><img src="figures/combined_cd8_umap_celltypes_integrated_c342a86b362c.png" width="50%"></a></p>
+<p><a href="figures/combined_cd8_umap_celltypes_pca_c342a86b362c.png"><img src="figures/combined_cd8_umap_celltypes_pca_c342a86b362c.png" width="50%"></a></p>
+<hr>
+<h2 id="54-score-umap-integrated-integrated_normalized_log1p-vs-raw-log1p">5.4. Score UMAP: integrated (integrated_normalized_log1p) vs raw (log1p)</h2>
+<p><a href="figures/umap_plot_combined_cd8_umap_scores_integrated_vs_raw_c342a86b362c.png"><img src="figures/umap_plot_combined_cd8_umap_scores_integrated_vs_raw_c342a86b362c.png" width="50%"></a></p>
+<hr>
+<h1 id="6-combined_cd8-inhibitory-receptor-analysis">6. COMBINED_CD8: inhibitory receptor analysis</h1>
+<p>Inhibitory receptor genes expressed (mean log1p &gt; 0.1): 21: SLAMF7, CD84, LAG3, VSIR, CD5, KLRB1, SLAMF1, CD244, LY9, KLRC1, HAVCR2, KLRG1, SLAMF6, CTLA4, CD200R1, FCRL6, TIGIT, PECAM1, KIR2DL4, LAIR1, PDCD1</p>
+<hr>
+<h2 id="61-ir-expression-per-gene">6.1. IR expression per gene</h2>
+<p>IR obs columns — integrated: ['IR_SLAMF7_integrated', 'IR_CD84_integrated', 'IR_LAG3_integrated', 'IR_VSIR_integrated', 'IR_CD5_integrated', 'IR_KLRB1_integrated', 'IR_SLAMF1_integrated', 'IR_CD244_integrated', 'IR_LY9_integrated', 'IR_KLRC1_integrated', 'IR_HAVCR2_integrated', 'IR_KLRG1_integrated', 'IR_SLAMF6_integrated', 'IR_CTLA4_integrated', 'IR_CD200R1_integrated', 'IR_FCRL6_integrated', 'IR_TIGIT_integrated', 'IR_PECAM1_integrated', 'IR_KIR2DL4_integrated', 'IR_LAIR1_integrated', 'IR_PDCD1_integrated']</p>
+<p>IR obs columns — raw:        ['IR_SLAMF7_raw', 'IR_CD84_raw', 'IR_LAG3_raw', 'IR_VSIR_raw', 'IR_CD5_raw', 'IR_KLRB1_raw', 'IR_SLAMF1_raw', 'IR_CD244_raw', 'IR_LY9_raw', 'IR_KLRC1_raw', 'IR_HAVCR2_raw', 'IR_KLRG1_raw', 'IR_SLAMF6_raw', 'IR_CTLA4_raw', 'IR_CD200R1_raw', 'IR_FCRL6_raw', 'IR_TIGIT_raw', 'IR_PECAM1_raw', 'IR_KIR2DL4_raw', 'IR_LAIR1_raw', 'IR_PDCD1_raw']</p>
+<h4>load file 26: <code>state_markers.csv</code></h4>
+<pre><code>file_version: 2026-04-21 10:55:48.543853355
+</code></pre>
+<hr>
+<h2 id="62-ir-dotplots">6.2. IR dotplots</h2>
+<p>Plotting 21 genes from adata.var[<code>inhibitory_receptor_genes_expressed</code>]</p>
+<p><a href="figures/combined_cd8_dotplot_IR_X_leiden_integrated_5cf612fee8e8.png"><img src="figures/combined_cd8_dotplot_IR_X_leiden_integrated_5cf612fee8e8.png" width="50%"></a></p>
+<p>Plotting 21 genes from adata.var[<code>inhibitory_receptor_genes_expressed</code>]</p>
+<p><a href="figures/combined_cd8_dotplot_IR_X_state_integrated_5cf612fee8e8.png"><img src="figures/combined_cd8_dotplot_IR_X_state_integrated_5cf612fee8e8.png" width="50%"></a></p>
+<p>Plotting 21 genes from adata.var[<code>inhibitory_receptor_genes_expressed</code>]</p>
+<p><a href="figures/combined_cd8_dotplot_IR_X_disease_integrated_5cf612fee8e8.png"><img src="figures/combined_cd8_dotplot_IR_X_disease_integrated_5cf612fee8e8.png" width="50%"></a></p>
+<p>Plotting 21 genes from adata.var[<code>inhibitory_receptor_genes_expressed</code>]</p>
+<p><a href="figures/combined_cd8_dotplot_IR_X_disease_detail_integrated_5cf612fee8e8.png"><img src="figures/combined_cd8_dotplot_IR_X_disease_detail_integrated_5cf612fee8e8.png" width="50%"></a></p>
+<p>Plotting 21 genes from adata.var[<code>inhibitory_receptor_genes_expressed</code>]</p>
+<p><a href="figures/combined_cd8_dotplot_IR_PBMC_vs_TIL_integrated_5cf612fee8e8.png"><img src="figures/combined_cd8_dotplot_IR_PBMC_vs_TIL_integrated_5cf612fee8e8.png" width="50%"></a></p>
+<p>Plotting 21 genes from adata.var[<code>inhibitory_receptor_genes_expressed</code>]</p>
+<p><a href="figures/combined_cd8_dotplot_IR_X_leiden_raw_5cf612fee8e8.png"><img src="figures/combined_cd8_dotplot_IR_X_leiden_raw_5cf612fee8e8.png" width="50%"></a></p>
+<p>Plotting 21 genes from adata.var[<code>inhibitory_receptor_genes_expressed</code>]</p>
+<p><a href="figures/combined_cd8_dotplot_IR_X_state_raw_5cf612fee8e8.png"><img src="figures/combined_cd8_dotplot_IR_X_state_raw_5cf612fee8e8.png" width="50%"></a></p>
+<p>Plotting 21 genes from adata.var[<code>inhibitory_receptor_genes_expressed</code>]</p>
+<p><a href="figures/combined_cd8_dotplot_IR_X_disease_raw_5cf612fee8e8.png"><img src="figures/combined_cd8_dotplot_IR_X_disease_raw_5cf612fee8e8.png" width="50%"></a></p>
+<p>Plotting 21 genes from adata.var[<code>inhibitory_receptor_genes_expressed</code>]</p>
+<p><a href="figures/combined_cd8_dotplot_IR_X_disease_detail_raw_5cf612fee8e8.png"><img src="figures/combined_cd8_dotplot_IR_X_disease_detail_raw_5cf612fee8e8.png" width="50%"></a></p>
+<p>Plotting 21 genes from adata.var[<code>inhibitory_receptor_genes_expressed</code>]</p>
+<p><a href="figures/combined_cd8_dotplot_IR_PBMC_vs_TIL_raw_5cf612fee8e8.png"><img src="figures/combined_cd8_dotplot_IR_PBMC_vs_TIL_raw_5cf612fee8e8.png" width="50%"></a></p>
+<hr>
+<h2 id="63-ir-boxplots-and-stripplots">6.3. IR boxplots and stripplots</h2>
+<p>Plotting 21 genes from adata.var[<code>inhibitory_receptor_genes_expressed</code>]</p>
+<p><a href="figures/combined_cd8_boxplot_IR_X_leiden_integrated_5cf612fee8e8.png"><img src="figures/combined_cd8_boxplot_IR_X_leiden_integrated_5cf612fee8e8.png" width="50%"></a></p>
+<p>Plotting 21 genes from adata.var[<code>inhibitory_receptor_genes_expressed</code>]</p>
+<p><a href="figures/combined_cd8_stripplot_IR_X_leiden_integrated_5cf612fee8e8.png"><img src="figures/combined_cd8_stripplot_IR_X_leiden_integrated_5cf612fee8e8.png" width="50%"></a></p>
+<p>Plotting 21 genes from adata.var[<code>inhibitory_receptor_genes_expressed</code>]</p>
+<p><a href="figures/combined_cd8_boxplot_IR_X_leiden_raw_5cf612fee8e8.png"><img src="figures/combined_cd8_boxplot_IR_X_leiden_raw_5cf612fee8e8.png" width="50%"></a></p>
+<p>Plotting 21 genes from adata.var[<code>inhibitory_receptor_genes_expressed</code>]</p>
+<p><a href="figures/combined_cd8_stripplot_IR_X_leiden_raw_5cf612fee8e8.png"><img src="figures/combined_cd8_stripplot_IR_X_leiden_raw_5cf612fee8e8.png" width="50%"></a></p>
+<hr>
+<h2 id="64-findallmarkers">6.4. FindAllMarkers</h2>
+<h4 id="findallmarkers">findallmarkers</h4>
+<p>function: findallmarkers
+parameters:
+  cluster_col: leiden
+  n_markers_per_cluster: 5
+  n_workers: null
+cache_file: data/findallmarkers_7de13a3f27d7.h5ad</p>
+<h3 id="641-finding-significant-genes-with-findallmarkers-via-seurat-in-r">6.4.1. Finding significant genes with FindAllMarkers (via Seurat in R)</h3>
+<p>parallelising with up to 64 R worker(s)</p>
+<p>Ran FindAllMarkers in R, keeping up to 5 markers per cluster and selected 63 genes</p>
+<p>Plotting 63 genes from adata.var[<code>findallmarkers_selected</code>]</p>
+<p><a href="figures/dotplot_leiden_allmarkers_7de13a3f27d7.png"><img src="figures/dotplot_leiden_allmarkers_7de13a3f27d7.png" width="50%"></a></p>
+<h3 id="642-cluster-to-state-summary-by-leiden">6.4.2. Cluster-to-state summary by <code>leiden</code>:</h3>
+<table>
+<thead>
+<tr>
+<th>cluster</th>
+<th>n_cells</th>
+<th>dominant_state</th>
+<th>pct_dominant_state</th>
+<th>top_markers</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>7</td>
+<td>5782</td>
+<td>cytotoxic</td>
+<td>75.60</td>
+<td>CX3CR1; FGFBP2; FGR; FCGR3A; S1PR5</td>
+</tr>
+<tr>
+<td>1</td>
+<td>9577</td>
+<td>naive/memory</td>
+<td>89.90</td>
+<td>TRABD2A; ACTN1; LEF1; MAL; ARMH1</td>
+</tr>
+<tr>
+<td>10</td>
+<td>3358</td>
+<td>cytotoxic</td>
+<td>82.80</td>
+<td>UBE2C; RRM2; MKI67; TYMS; TOP2A</td>
+</tr>
+<tr>
+<td>3</td>
+<td>8576</td>
+<td>cytotoxic</td>
+<td>70.60</td>
+<td>GZMK; HAVCR2; TNFSF9; CD38; LAG3</td>
+</tr>
+<tr>
+<td>6</td>
+<td>6191</td>
+<td>exhausted</td>
+<td>56</td>
+<td>FOXP3; TNFRSF4; TNFRSF18; GK; IL2RA</td>
+</tr>
+<tr>
+<td>12</td>
+<td>863</td>
+<td>naive/memory</td>
+<td>96.10</td>
+<td>LYPD3; SCML1; PHLDB3; SGK1; ACTN1</td>
+</tr>
+<tr>
+<td>2</td>
+<td>9330</td>
+<td>cytotoxic</td>
+<td>48.20</td>
+<td>AC020916.1; CD160; SPRY1; TMIGD2; HOPX</td>
+</tr>
+<tr>
+<td>11</td>
+<td>912</td>
+<td>naive/memory</td>
+<td>97.50</td>
+<td>ACTN1; CCR7; PASK; AC119396.1; TMEM204</td>
+</tr>
+<tr>
+<td>5</td>
+<td>7227</td>
+<td>cytotoxic</td>
+<td>38.30</td>
+<td>LMNA; RGCC; MYADM; SKIL; UBE2S</td>
+</tr>
+<tr>
+<td>8</td>
+<td>3997</td>
+<td>naive/memory</td>
+<td>41.80</td>
+<td>FILIP1L; RORA-AS1; SIK3; PLCL1; RFX3</td>
+</tr>
+<tr>
+<td>4</td>
+<td>8324</td>
+<td>cytotoxic</td>
+<td>37.80</td>
+<td>HSPA6; HSPA1A; HSPA1B; BAG3; DNAJB1</td>
+</tr>
+<tr>
+<td>0</td>
+<td>10299</td>
+<td>cytotoxic</td>
+<td>49.40</td>
+<td>DKK3; IL9R; MTRNR2L8; PRR5L; GGA2</td>
+</tr>
+<tr>
+<td>9</td>
+<td>3911</td>
+<td>cytotoxic</td>
+<td>52.60</td>
+<td>ATF3; RASGEF1B; TNFAIP3; NFKBIZ; PER1</td>
+</tr>
+</tbody>
+</table>
+<p>Saved cluster summary CSV for manual annotation: /ceph/project/sharmalab/dnimrich/cd8atlas/output/cd8_atlas/data/combined_cd8_cluster_state_summary.csv</p>
+<hr>
+<h2 id="65-ir-umaps-per-gene">6.5. IR UMAPs per gene</h2>
+<p><a href="figures/combined_cd8_umap_IR_integrated_embedding_integrated_7de13a3f27d7.png"><img src="figures/combined_cd8_umap_IR_integrated_embedding_integrated_7de13a3f27d7.png" width="50%"></a></p>
+<p><a href="figures/combined_cd8_umap_IR_integrated_embedding_raw_7de13a3f27d7.png"><img src="figures/combined_cd8_umap_IR_integrated_embedding_raw_7de13a3f27d7.png" width="50%"></a></p>
+<p><a href="figures/combined_cd8_umap_IR_pca_embedding_integrated_7de13a3f27d7.png"><img src="figures/combined_cd8_umap_IR_pca_embedding_integrated_7de13a3f27d7.png" width="50%"></a></p>
+<p><a href="figures/combined_cd8_umap_IR_pca_embedding_raw_7de13a3f27d7.png"><img src="figures/combined_cd8_umap_IR_pca_embedding_raw_7de13a3f27d7.png" width="50%"></a></p>
+<h4>load file 27: <code>INFLAMMATION_ATLAS_afterQC_sampleMetadata.csv</code></h4>
+<pre><code>file_version: 2026-07-07 14:00:36.573666524
+</code></pre>
+<h4>load file 28: <code>inhibitory_receptor_list_new.csv</code></h4>
+<pre><code>file_version: 2026-05-13 15:49:25.468477661
+</code></pre>
+<p>Compartment from tissue_type: {'PBMC': {'PBMC': 15105, 'tissue': 0}, 'TIL': {'PBMC': 0, 'tissue': 16333}, 'breast': {'PBMC': 0, 'tissue': 2796}, 'esophagus': {'PBMC': 0, 'tissue': 3264}, 'kidney': {'PBMC': 0, 'tissue': 1981}, 'lymph_node': {'PBMC': 0, 'tissue': 541}, 'mouth/throat': {'PBMC': 0, 'tissue': 1505}, 'ovary': {'PBMC': 0, 'tissue': 9}, 'prostate': {'PBMC': 0, 'tissue': 2587}, 'synovial fluid': {'PBMC': 0, 'tissue': 2277}, 'tissue': {'PBMC': 0, 'tissue': 31949}}</p>
+<hr>
+<h1 id="7-combined_cd8-atlas-summary-studies-diseases-cell-states">7. COMBINED_CD8 atlas summary: studies, diseases, cell states</h1>
+<hr>
+<h2 id="71-which-studies-were-integrated">7.1. Which studies were integrated?</h2>
+<p><a href="figures/combined_cd8_atlas_studies_acb8f386d29b.png"><img src="figures/combined_cd8_atlas_studies_acb8f386d29b.png" width="50%"></a></p>
+<table>
+<thead>
+<tr>
+<th>index</th>
+<th>study</th>
+<th>n_cells</th>
+<th>pct_cells</th>
+<th>sub_studies</th>
+<th>tissues</th>
+<th>diseases</th>
+<th>chemistry</th>
+<th>assay</th>
+<th>tissue_detail</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>15</td>
+<td>Yost2019</td>
+<td>16333</td>
+<td>20.80</td>
+<td>1</td>
+<td>TIL</td>
+<td>Cutaneous SCC, Basal cell carcinoma</td>
+<td>10x_5p_v1</td>
+<td>5'</td>
+<td></td>
+</tr>
+<tr>
+<td>10</td>
+<td>Luoma2020</td>
+<td>8926</td>
+<td>11.40</td>
+<td>1</td>
+<td>tissue</td>
+<td>Healthy, CPI-induced colitis</td>
+<td>10x_5p_v1</td>
+<td>5'</td>
+<td>Ascending, Descending, sigmoidal colon/rectum, Ascending, transverse, descending, sigmoidal colon/rectum, Descending, sigmoidal colon/rectum, Sigmoidal colon, sigmoidal colon/rectum</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Agne_UC_CD8</td>
+<td>8106</td>
+<td>10.30</td>
+<td>1</td>
+<td>tissue</td>
+<td>Ulcerative colitis, Healthy</td>
+<td>10x_5p_v1</td>
+<td>5'</td>
+<td></td>
+</tr>
+<tr>
+<td>5</td>
+<td>Ali2023</td>
+<td>5837</td>
+<td>7.50</td>
+<td>1</td>
+<td>PBMC, breast, ovary</td>
+<td>Breast cancer, Ovarian cancer</td>
+<td>10x_5p_v2</td>
+<td>5'</td>
+<td></td>
+</tr>
+<tr>
+<td>8</td>
+<td>Kim2022</td>
+<td>5112</td>
+<td>6.50</td>
+<td>1</td>
+<td>PBMC, synovial fluid</td>
+<td>Rheumatoid arthritis</td>
+<td>10x_5p_v1</td>
+<td>5'</td>
+<td></td>
+</tr>
+<tr>
+<td>1</td>
+<td>Agne_Celiac_ds2</td>
+<td>4783</td>
+<td>6.10</td>
+<td>1</td>
+<td>tissue</td>
+<td>Celiac disease, Healthy</td>
+<td>10x_5p_v1</td>
+<td>5'</td>
+<td></td>
+</tr>
+<tr>
+<td>13</td>
+<td>Ramaswamy2021</td>
+<td>4182</td>
+<td>5.30</td>
+<td>1</td>
+<td>PBMC</td>
+<td>Healthy, MIS-C, MIS-C (recovered)</td>
+<td>10x_5p_v1</td>
+<td>5'</td>
+<td>adult, pediatric</td>
+</tr>
+<tr>
+<td>16</td>
+<td>Zheng2020</td>
+<td>3264</td>
+<td>4.20</td>
+<td>1</td>
+<td>esophagus</td>
+<td>Esophageal SCC</td>
+<td>10x_5p_v1</td>
+<td>5'</td>
+<td>adjacent normal tissue, malignant tissue</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Lee2022</td>
+<td>2754</td>
+<td>3.50</td>
+<td>1</td>
+<td>tissue</td>
+<td>Chronic pancreatitis, Healthy</td>
+<td>10x_5p</td>
+<td>5'</td>
+<td></td>
+</tr>
+<tr>
+<td>14</td>
+<td>Wong2022</td>
+<td>2587</td>
+<td>3.30</td>
+<td>1</td>
+<td>prostate</td>
+<td>Prostate cancer</td>
+<td>10x_5p_v1, 10x_5p_v2</td>
+<td>5'</td>
+<td>non tumour tissue from patient, tumour itself</td>
+</tr>
+<tr>
+<td>17</td>
+<td>Zheng2021</td>
+<td>2514</td>
+<td>3.20</td>
+<td>1</td>
+<td>breast</td>
+<td>Breast cancer</td>
+<td>10x_5p_v3</td>
+<td>5'</td>
+<td></td>
+</tr>
+<tr>
+<td>3</td>
+<td>Agne_developmental</td>
+<td>2403</td>
+<td>3.10</td>
+<td>1</td>
+<td>tissue</td>
+<td>Healthy</td>
+<td>3prime multiome</td>
+<td>3'M</td>
+<td>adult, fetal, pediatric</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Borcherding2021</td>
+<td>2382</td>
+<td>3</td>
+<td>1</td>
+<td>PBMC, kidney</td>
+<td>Clear cell renal carcinoma</td>
+<td>10x_5p_v2</td>
+<td>5'</td>
+<td></td>
+</tr>
+<tr>
+<td>11</td>
+<td>Martin_CD</td>
+<td>2238</td>
+<td>2.90</td>
+<td>1</td>
+<td>tissue</td>
+<td>Crohn's disease</td>
+<td>10x_3p_V1, 10x_3p_V2</td>
+<td>3'</td>
+<td>ileal</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Chow2023</td>
+<td>2141</td>
+<td>2.70</td>
+<td>1</td>
+<td>PBMC</td>
+<td>Endometrial cancer</td>
+<td>10x_5p_v1</td>
+<td>5'</td>
+<td>epi-MMRd, mut-MMRd</td>
+</tr>
+<tr>
+<td>12</td>
+<td>Rahim2023</td>
+<td>2046</td>
+<td>2.60</td>
+<td>1</td>
+<td>lymph_node, mouth/throat</td>
+<td>Head and neck SCC</td>
+<td>10x_5p_v1</td>
+<td>5'</td>
+<td></td>
+</tr>
+<tr>
+<td>4</td>
+<td>Agne_polyp</td>
+<td>1483</td>
+<td>1.90</td>
+<td>1</td>
+<td>tissue</td>
+<td>Colorectal polyp (pre-cancer), Healthy</td>
+<td>10x_3p_dogma-seq</td>
+<td>3'M</td>
+<td>Ascending colon, Caecum, Sigmoid colon, Transverse colon</td>
+</tr>
+<tr>
+<td>0</td>
+<td>Agne_CD</td>
+<td>1256</td>
+<td>1.60</td>
+<td>1</td>
+<td>tissue</td>
+<td>Crohn's disease, Healthy</td>
+<td>10x_5p_v1</td>
+<td>5'</td>
+<td>ileal/epithelium</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="72-which-diseases-does-it-span">7.2. Which diseases does it span?</h2>
+<p><a href="figures/combined_cd8_atlas_diseases_acb8f386d29b.png"><img src="figures/combined_cd8_atlas_diseases_acb8f386d29b.png" width="50%"></a></p>
+<table>
+<thead>
+<tr>
+<th>index</th>
+<th>disease</th>
+<th>group</th>
+<th>n_cells</th>
+<th>PBMC</th>
+<th>tissue</th>
+<th>studies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>Rheumatoid arthritis</td>
+<td>IMIDs</td>
+<td>5112</td>
+<td>2835</td>
+<td>2277</td>
+<td>Kim2022</td>
+</tr>
+<tr>
+<td>1</td>
+<td>Ulcerative colitis</td>
+<td>IMIDs</td>
+<td>4447</td>
+<td>0</td>
+<td>4447</td>
+<td>Agne_UC_CD8</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Celiac disease</td>
+<td>IMIDs</td>
+<td>4162</td>
+<td>0</td>
+<td>4162</td>
+<td>Agne_Celiac_ds2</td>
+</tr>
+<tr>
+<td>3</td>
+<td>CPI-induced colitis</td>
+<td>IMIDs</td>
+<td>3603</td>
+<td>0</td>
+<td>3603</td>
+<td>Luoma2020</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Crohn's disease</td>
+<td>IMIDs</td>
+<td>3350</td>
+<td>0</td>
+<td>3350</td>
+<td>Martin_CD, Agne_CD</td>
+</tr>
+<tr>
+<td>5</td>
+<td>MIS-C</td>
+<td>IMIDs</td>
+<td>1253</td>
+<td>1253</td>
+<td>0</td>
+<td>Ramaswamy2021</td>
+</tr>
+<tr>
+<td>6</td>
+<td>MIS-C (recovered)</td>
+<td>IMIDs</td>
+<td>613</td>
+<td>613</td>
+<td>0</td>
+<td>Ramaswamy2021</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Chronic pancreatitis</td>
+<td>Chronic Inflamm.</td>
+<td>2290</td>
+<td>0</td>
+<td>2290</td>
+<td>Lee2022</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Cutaneous SCC</td>
+<td>Solid Tumors</td>
+<td>8876</td>
+<td>0</td>
+<td>8876</td>
+<td>Yost2019</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Breast cancer</td>
+<td>Solid Tumors</td>
+<td>7912</td>
+<td>5116</td>
+<td>2796</td>
+<td>Ali2023, Zheng2021</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Basal cell carcinoma</td>
+<td>Solid Tumors</td>
+<td>7457</td>
+<td>0</td>
+<td>7457</td>
+<td>Yost2019</td>
+</tr>
+<tr>
+<td>11</td>
+<td>Esophageal SCC</td>
+<td>Solid Tumors</td>
+<td>3264</td>
+<td>0</td>
+<td>3264</td>
+<td>Zheng2020</td>
+</tr>
+<tr>
+<td>12</td>
+<td>Prostate cancer</td>
+<td>Solid Tumors</td>
+<td>2587</td>
+<td>0</td>
+<td>2587</td>
+<td>Wong2022</td>
+</tr>
+<tr>
+<td>13</td>
+<td>Clear cell renal carcinoma</td>
+<td>Solid Tumors</td>
+<td>2382</td>
+<td>401</td>
+<td>1981</td>
+<td>Borcherding2021</td>
+</tr>
+<tr>
+<td>14</td>
+<td>Endometrial cancer</td>
+<td>Solid Tumors</td>
+<td>2141</td>
+<td>2141</td>
+<td>0</td>
+<td>Chow2023</td>
+</tr>
+<tr>
+<td>15</td>
+<td>Head and neck SCC</td>
+<td>Solid Tumors</td>
+<td>2046</td>
+<td>0</td>
+<td>2046</td>
+<td>Rahim2023</td>
+</tr>
+<tr>
+<td>16</td>
+<td>Ovarian cancer</td>
+<td>Solid Tumors</td>
+<td>439</td>
+<td>430</td>
+<td>9</td>
+<td>Ali2023</td>
+</tr>
+<tr>
+<td>17</td>
+<td>Colorectal polyp (pre-cancer)</td>
+<td>Pre-cancer</td>
+<td>1067</td>
+<td>0</td>
+<td>1067</td>
+<td>Agne_polyp</td>
+</tr>
+<tr>
+<td>18</td>
+<td>Healthy</td>
+<td>Healthy controls</td>
+<td>15346</td>
+<td>2316</td>
+<td>13030</td>
+<td>Luoma2020, Agne_UC_CD8, Agne_developmental, Ramaswamy2021, Agne_Celiac_ds2, Lee2022, Agne_polyp, Agne_CD</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="73-which-cell-states-were-captured">7.3. Which cell states were captured?</h2>
+<p><a href="figures/combined_cd8_atlas_states_acb8f386d29b.png"><img src="figures/combined_cd8_atlas_states_acb8f386d29b.png" width="50%"></a></p>
+<hr>
+<h2 id="74-umaps-all-cells-cell-states-diseases">7.4. UMAPs: all cells, cell states, diseases</h2>
+<p><a href="figures/combined_cd8_atlas_umap_overview_acb8f386d29b.png"><img src="figures/combined_cd8_atlas_umap_overview_acb8f386d29b.png" width="50%"></a></p>
+<p><a href="figures/combined_cd8_atlas_umap_disease_acb8f386d29b.png"><img src="figures/combined_cd8_atlas_umap_disease_acb8f386d29b.png" width="50%"></a></p>
+<hr>
+<h1 id="8-combined_cd8-atlas-summary-inhibitory-receptors">8. COMBINED_CD8 atlas summary: inhibitory receptors</h1>
+<p>Detection = ≥1 raw count. Tiers: <strong>never</strong> &lt; 1% of all cells; <strong>always</strong> ≥ 10% of cells in every state and every disease × compartment group (groups with ≥ 100 cells); <strong>not in data</strong> = symbol not in the lineage object.</p>
+<p><strong>always</strong> (1): CD5</p>
+<p><strong>context-dependent</strong> (26): TIGIT, LAG3, KLRB1, LY9, VSIR, CTLA4, SLAMF1, PDCD1, KLRG1, PECAM1, CD84, SLAMF7, SLAMF6, LAIR1, CD244, HAVCR2, CD200R1, KLRC1, FCRL6, KIR2DL4, FCRL3, BTLA, CD99L2, KIR3DL2, CD72, LILRB1</p>
+<p><strong>never</strong> (20): KIR2DL3, CEACAM1, SIGLEC10, CLEC12A, KIR3DL1, KIR2DL1, FCGR2B, MPIG6B, FCGR2A, PILRA, LILRB3, CLEC4A, LILRB2, SIGLEC9, LILRB4, CD33, SIRPA, SIGLEC7, CD22, CLEC1B</p>
+<p><strong>not in data</strong> (21): CLEC12B, CLEC1A, CLEC8A, CLEC9A, FCRL2, FCRL4, FCRL5, FCGR2C, KIR2DL2, KIR2DL5A, KIR3DL3, KLRF2, LILRB5, NCR2, VSTM1, VSTM4, SIGLEC11, SIGLEC12, SIGLEC5, SIGLEC6, SIGLEC8</p>
+<hr>
+<h2 id="81-which-inhibitory-receptors-are-expressed-never-expressed-always-expressed">8.1. Which inhibitory receptors are expressed, never expressed, always expressed?</h2>
+<p><a href="figures/combined_cd8_atlas_IR_detection_acb8f386d29b.png"><img src="figures/combined_cd8_atlas_IR_detection_acb8f386d29b.png" width="50%"></a></p>
+<table>
+<thead>
+<tr>
+<th>index</th>
+<th>category</th>
+<th>tier</th>
+<th>var_name</th>
+<th>pct_cells</th>
+<th>min_pct_any_group</th>
+<th>top_state</th>
+<th>state_spread_pp</th>
+<th>top_disease</th>
+<th>disease_spread_pp</th>
+<th>zero_count_datasets</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TIGIT</td>
+<td>Classical</td>
+<td>context-dependent</td>
+<td>ENSG00000181847</td>
+<td>39.10</td>
+<td>3.50</td>
+<td>exhausted</td>
+<td>51</td>
+<td>Cutaneous SCC (tissue)</td>
+<td>64.20</td>
+<td>0</td>
+</tr>
+<tr>
+<td>CD5</td>
+<td>Unconventional</td>
+<td>always</td>
+<td>ENSG00000110448</td>
+<td>36.30</td>
+<td>11.20</td>
+<td>naive/memory</td>
+<td>15.50</td>
+<td>Basal cell carcinoma (tissue)</td>
+<td>49.90</td>
+<td>0</td>
+</tr>
+<tr>
+<td>LAG3</td>
+<td>Classical</td>
+<td>context-dependent</td>
+<td>ENSG00000089692</td>
+<td>33.20</td>
+<td>3.10</td>
+<td>cytotoxic</td>
+<td>37.40</td>
+<td>CPI-induced colitis (tissue)</td>
+<td>68.40</td>
+<td>0</td>
+</tr>
+<tr>
+<td>KLRB1</td>
+<td>KLRs</td>
+<td>context-dependent</td>
+<td>ENSG00000111796</td>
+<td>32.50</td>
+<td>5.70</td>
+<td>effector</td>
+<td>38.30</td>
+<td>Crohn's disease (tissue)</td>
+<td>55.30</td>
+<td>0</td>
+</tr>
+<tr>
+<td>LY9</td>
+<td>SLAMs</td>
+<td>context-dependent</td>
+<td>ENSG00000122224</td>
+<td>23.90</td>
+<td>5.60</td>
+<td>cytotoxic</td>
+<td>8.50</td>
+<td>CPI-induced colitis (tissue)</td>
+<td>43.40</td>
+<td>0</td>
+</tr>
+<tr>
+<td>VSIR</td>
+<td>Others</td>
+<td>context-dependent</td>
+<td>ENSG00000107738</td>
+<td>20.30</td>
+<td>0</td>
+<td>naive/memory</td>
+<td>11.40</td>
+<td>MIS-C (PBMC)</td>
+<td>55.30</td>
+<td>5</td>
+</tr>
+<tr>
+<td>CTLA4</td>
+<td>Classical</td>
+<td>context-dependent</td>
+<td>ENSG00000163599</td>
+<td>18.80</td>
+<td>1.30</td>
+<td>exhausted</td>
+<td>39.80</td>
+<td>CPI-induced colitis (tissue)</td>
+<td>45.20</td>
+<td>0</td>
+</tr>
+<tr>
+<td>SLAMF1</td>
+<td>SLAMs</td>
+<td>context-dependent</td>
+<td>ENSG00000117090</td>
+<td>17.30</td>
+<td>3</td>
+<td>exhausted</td>
+<td>11.90</td>
+<td>CPI-induced colitis (tissue)</td>
+<td>38.70</td>
+<td>0</td>
+</tr>
+<tr>
+<td>PDCD1</td>
+<td>Classical</td>
+<td>context-dependent</td>
+<td>PDCD1</td>
+<td>16.70</td>
+<td>1.40</td>
+<td>exhausted</td>
+<td>24.70</td>
+<td>Clear cell renal carcinoma (tissue)</td>
+<td>46.20</td>
+<td>0</td>
+</tr>
+<tr>
+<td>KLRG1</td>
+<td>KLRs</td>
+<td>context-dependent</td>
+<td>ENSG00000139187</td>
+<td>15.60</td>
+<td>1.60</td>
+<td>cytotoxic</td>
+<td>13.80</td>
+<td>Rheumatoid arthritis (PBMC)</td>
+<td>57.90</td>
+<td>0</td>
+</tr>
+<tr>
+<td>PECAM1</td>
+<td>Others</td>
+<td>context-dependent</td>
+<td>ENSG00000261371</td>
+<td>15.50</td>
+<td>0.60</td>
+<td>cytotoxic</td>
+<td>7.60</td>
+<td>CPI-induced colitis (tissue)</td>
+<td>41</td>
+<td>0</td>
+</tr>
+<tr>
+<td>CD84</td>
+<td>SLAMs</td>
+<td>context-dependent</td>
+<td>ENSG00000066294</td>
+<td>14.30</td>
+<td>3.70</td>
+<td>exhausted</td>
+<td>5.70</td>
+<td>CPI-induced colitis (tissue)</td>
+<td>24.90</td>
+<td>0</td>
+</tr>
+<tr>
+<td>SLAMF7</td>
+<td>SLAMs</td>
+<td>context-dependent</td>
+<td>ENSG00000026751</td>
+<td>13.70</td>
+<td>1.60</td>
+<td>cytotoxic</td>
+<td>17.50</td>
+<td>CPI-induced colitis (tissue)</td>
+<td>29.20</td>
+<td>0</td>
+</tr>
+<tr>
+<td>SLAMF6</td>
+<td>SLAMs</td>
+<td>context-dependent</td>
+<td>ENSG00000162739</td>
+<td>13.60</td>
+<td>4.60</td>
+<td>cytotoxic</td>
+<td>6.70</td>
+<td>CPI-induced colitis (tissue)</td>
+<td>25.10</td>
+<td>0</td>
+</tr>
+<tr>
+<td>LAIR1</td>
+<td>Others</td>
+<td>context-dependent</td>
+<td>LAIR1</td>
+<td>11.80</td>
+<td>1.70</td>
+<td>cytotoxic</td>
+<td>7.40</td>
+<td>CPI-induced colitis (tissue)</td>
+<td>29</td>
+<td>0</td>
+</tr>
+<tr>
+<td>CD244</td>
+<td>SLAMs</td>
+<td>context-dependent</td>
+<td>ENSG00000122223</td>
+<td>11.20</td>
+<td>0.70</td>
+<td>cytotoxic</td>
+<td>14</td>
+<td>CPI-induced colitis (tissue)</td>
+<td>33</td>
+<td>0</td>
+</tr>
+<tr>
+<td>HAVCR2</td>
+<td>Classical</td>
+<td>context-dependent</td>
+<td>ENSG00000135077</td>
+<td>9.70</td>
+<td>1</td>
+<td>cytotoxic</td>
+<td>13.90</td>
+<td>Clear cell renal carcinoma (tissue)</td>
+<td>35.90</td>
+<td>0</td>
+</tr>
+<tr>
+<td>CD200R1</td>
+<td>Classical</td>
+<td>context-dependent</td>
+<td>ENSG00000163606</td>
+<td>9.60</td>
+<td>1</td>
+<td>cytotoxic</td>
+<td>6.60</td>
+<td>Clear cell renal carcinoma (tissue)</td>
+<td>34.60</td>
+<td>0</td>
+</tr>
+<tr>
+<td>KLRC1</td>
+<td>KLRs</td>
+<td>context-dependent</td>
+<td>ENSG00000134545</td>
+<td>9.60</td>
+<td>0.50</td>
+<td>cytotoxic</td>
+<td>10.10</td>
+<td>Prostate cancer (tissue)</td>
+<td>31.80</td>
+<td>0</td>
+</tr>
+<tr>
+<td>FCRL6</td>
+<td>FCRLs</td>
+<td>context-dependent</td>
+<td>ENSG00000181036</td>
+<td>8.20</td>
+<td>0</td>
+<td>cytotoxic</td>
+<td>12</td>
+<td>Rheumatoid arthritis (PBMC)</td>
+<td>50.30</td>
+<td>0</td>
+</tr>
+<tr>
+<td>KIR2DL4</td>
+<td>KIRs</td>
+<td>context-dependent</td>
+<td>KIR2DL4</td>
+<td>6.10</td>
+<td>0</td>
+<td>cytotoxic</td>
+<td>10.20</td>
+<td>Celiac disease (tissue)</td>
+<td>26.30</td>
+<td>1</td>
+</tr>
+<tr>
+<td>FCRL3</td>
+<td>FCRLs</td>
+<td>context-dependent</td>
+<td>ENSG00000160856</td>
+<td>5</td>
+<td>0.90</td>
+<td>exhausted</td>
+<td>6.70</td>
+<td>Rheumatoid arthritis (PBMC)</td>
+<td>12.80</td>
+<td>0</td>
+</tr>
+<tr>
+<td>BTLA</td>
+<td>Classical</td>
+<td>context-dependent</td>
+<td>ENSG00000186265</td>
+<td>4.40</td>
+<td>0.90</td>
+<td>exhausted</td>
+<td>5.20</td>
+<td>CPI-induced colitis (tissue)</td>
+<td>10.20</td>
+<td>0</td>
+</tr>
+<tr>
+<td>CD99L2</td>
+<td>Others</td>
+<td>context-dependent</td>
+<td>ENSG00000102181</td>
+<td>3</td>
+<td>0.90</td>
+<td>cytotoxic</td>
+<td>0.70</td>
+<td>CPI-induced colitis (tissue)</td>
+<td>6.30</td>
+<td>0</td>
+</tr>
+<tr>
+<td>KIR3DL2</td>
+<td>KIRs</td>
+<td>context-dependent</td>
+<td>KIR3DL2</td>
+<td>1.90</td>
+<td>0</td>
+<td>cytotoxic</td>
+<td>2.10</td>
+<td>Clear cell renal carcinoma (PBMC)</td>
+<td>5.50</td>
+<td>0</td>
+</tr>
+<tr>
+<td>CD72</td>
+<td>Others</td>
+<td>context-dependent</td>
+<td>ENSG00000137101</td>
+<td>1.80</td>
+<td>0.70</td>
+<td>cytotoxic</td>
+<td>1.20</td>
+<td>CPI-induced colitis (tissue)</td>
+<td>3.40</td>
+<td>0</td>
+</tr>
+<tr>
+<td>LILRB1</td>
+<td>LILRBs</td>
+<td>context-dependent</td>
+<td>LILRB1</td>
+<td>1.50</td>
+<td>0</td>
+<td>cytotoxic</td>
+<td>2.60</td>
+<td>Rheumatoid arthritis (PBMC)</td>
+<td>11.70</td>
+<td>1</td>
+</tr>
+<tr>
+<td>KIR2DL3</td>
+<td>KIRs</td>
+<td>never</td>
+<td>KIR2DL3</td>
+<td>1</td>
+<td>0</td>
+<td>cytotoxic</td>
+<td>1.30</td>
+<td>Rheumatoid arthritis (PBMC)</td>
+<td>3.40</td>
+<td>2</td>
+</tr>
+<tr>
+<td>CEACAM1</td>
+<td>Others</td>
+<td>never</td>
+<td>ENSG00000079385</td>
+<td>0.90</td>
+<td>0</td>
+<td>exhausted</td>
+<td>1.10</td>
+<td>Crohn's disease (tissue)</td>
+<td>2.10</td>
+<td>1</td>
+</tr>
+<tr>
+<td>SIGLEC10</td>
+<td>SIGLECs</td>
+<td>never</td>
+<td>ENSG00000142512</td>
+<td>0.50</td>
+<td>0</td>
+<td>cytotoxic</td>
+<td>0.60</td>
+<td>CPI-induced colitis (tissue)</td>
+<td>1.90</td>
+<td>6</td>
+</tr>
+<tr>
+<td>CLEC12A</td>
+<td>CLECs</td>
+<td>never</td>
+<td>ENSG00000172322</td>
+<td>0.50</td>
+<td>0</td>
+<td>cytotoxic</td>
+<td>0.70</td>
+<td>CPI-induced colitis (tissue)</td>
+<td>1.50</td>
+<td>1</td>
+</tr>
+<tr>
+<td>KIR3DL1</td>
+<td>KIRs</td>
+<td>never</td>
+<td>KIR3DL1</td>
+<td>0.50</td>
+<td>0</td>
+<td>cytotoxic</td>
+<td>0.70</td>
+<td>Ovarian cancer (PBMC)</td>
+<td>2.10</td>
+<td>4</td>
+</tr>
+<tr>
+<td>KIR2DL1</td>
+<td>KIRs</td>
+<td>never</td>
+<td>KIR2DL1</td>
+<td>0.30</td>
+<td>0</td>
+<td>cytotoxic</td>
+<td>0.60</td>
+<td>Rheumatoid arthritis (PBMC)</td>
+<td>0.70</td>
+<td>3</td>
+</tr>
+<tr>
+<td>FCGR2B</td>
+<td>Fcs</td>
+<td>never</td>
+<td>ENSG00000072694</td>
+<td>0.30</td>
+<td>0</td>
+<td>cytotoxic</td>
+<td>0.40</td>
+<td>Rheumatoid arthritis (PBMC)</td>
+<td>1.50</td>
+<td>4</td>
+</tr>
+<tr>
+<td>MPIG6B</td>
+<td>Others</td>
+<td>never</td>
+<td>MPIG6B</td>
+<td>0.20</td>
+<td>0</td>
+<td>naive/memory</td>
+<td>0.50</td>
+<td>MIS-C (PBMC)</td>
+<td>2.50</td>
+<td>10</td>
+</tr>
+<tr>
+<td>FCGR2A</td>
+<td>Fcs</td>
+<td>never</td>
+<td>ENSG00000143226</td>
+<td>0.20</td>
+<td>0</td>
+<td>effector</td>
+<td>0.10</td>
+<td>Esophageal SCC (tissue)</td>
+<td>0.90</td>
+<td>6</td>
+</tr>
+<tr>
+<td>PILRA</td>
+<td>Others</td>
+<td>never</td>
+<td>ENSG00000085514</td>
+<td>0.20</td>
+<td>0</td>
+<td>effector</td>
+<td>0.10</td>
+<td>Clear cell renal carcinoma (PBMC)</td>
+<td>0.50</td>
+<td>5</td>
+</tr>
+<tr>
+<td>LILRB3</td>
+<td>LILRBs</td>
+<td>never</td>
+<td>LILRB3</td>
+<td>0.20</td>
+<td>0</td>
+<td>naive/memory</td>
+<td>0.10</td>
+<td>Ovarian cancer (PBMC)</td>
+<td>1.20</td>
+<td>6</td>
+</tr>
+<tr>
+<td>CLEC4A</td>
+<td>CLECs</td>
+<td>never</td>
+<td>ENSG00000111729</td>
+<td>0.20</td>
+<td>0</td>
+<td>exhausted</td>
+<td>0.10</td>
+<td>Esophageal SCC (tissue)</td>
+<td>0.80</td>
+<td>5</td>
+</tr>
+<tr>
+<td>LILRB2</td>
+<td>LILRBs</td>
+<td>never</td>
+<td>LILRB2</td>
+<td>0.10</td>
+<td>0</td>
+<td>cytotoxic</td>
+<td>0.10</td>
+<td>Clear cell renal carcinoma (PBMC)</td>
+<td>0.70</td>
+<td>10</td>
+</tr>
+<tr>
+<td>SIGLEC9</td>
+<td>SIGLECs</td>
+<td>never</td>
+<td>ENSG00000129450</td>
+<td>0.10</td>
+<td>0</td>
+<td>cytotoxic</td>
+<td>0.10</td>
+<td>Rheumatoid arthritis (PBMC)</td>
+<td>0.40</td>
+<td>8</td>
+</tr>
+<tr>
+<td>LILRB4</td>
+<td>LILRBs</td>
+<td>never</td>
+<td>LILRB4</td>
+<td>0.10</td>
+<td>0</td>
+<td>cytotoxic</td>
+<td>0.10</td>
+<td>Rheumatoid arthritis (tissue)</td>
+<td>0.50</td>
+<td>10</td>
+</tr>
+<tr>
+<td>CD33</td>
+<td>SIGLECs</td>
+<td>never</td>
+<td>ENSG00000105383</td>
+<td>0.10</td>
+<td>0</td>
+<td>exhausted</td>
+<td>0.10</td>
+<td>Clear cell renal carcinoma (tissue)</td>
+<td>0.30</td>
+<td>8</td>
+</tr>
+<tr>
+<td>SIRPA</td>
+<td>Others</td>
+<td>never</td>
+<td>ENSG00000198053</td>
+<td>0.10</td>
+<td>0</td>
+<td>cytotoxic</td>
+<td>0</td>
+<td>Esophageal SCC (tissue)</td>
+<td>0.40</td>
+<td>10</td>
+</tr>
+<tr>
+<td>SIGLEC7</td>
+<td>SIGLECs</td>
+<td>never</td>
+<td>ENSG00000168995</td>
+<td>0</td>
+<td>0</td>
+<td>effector</td>
+<td>0.10</td>
+<td>Healthy (PBMC)</td>
+<td>0.20</td>
+<td>8</td>
+</tr>
+<tr>
+<td>CD22</td>
+<td>SIGLECs</td>
+<td>never</td>
+<td>ENSG00000012124</td>
+<td>0</td>
+<td>0</td>
+<td>effector</td>
+<td>0</td>
+<td>MIS-C (PBMC)</td>
+<td>0.20</td>
+<td>12</td>
+</tr>
+<tr>
+<td>CLEC1B</td>
+<td>CLECs</td>
+<td>never</td>
+<td>ENSG00000165682</td>
+<td>0</td>
+<td>0</td>
+<td>naive/memory</td>
+<td>0</td>
+<td>MIS-C (PBMC)</td>
+<td>0.20</td>
+<td>14</td>
+</tr>
+<tr>
+<td>CLEC12B</td>
+<td>CLECs</td>
+<td>not in data</td>
+<td></td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+</tr>
+<tr>
+<td>CLEC1A</td>
+<td>CLECs</td>
+<td>not in data</td>
+<td></td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+</tr>
+<tr>
+<td>CLEC8A</td>
+<td>CLECs</td>
+<td>not in data</td>
+<td></td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+</tr>
+<tr>
+<td>CLEC9A</td>
+<td>CLECs</td>
+<td>not in data</td>
+<td></td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+</tr>
+<tr>
+<td>FCRL2</td>
+<td>FCRLs</td>
+<td>not in data</td>
+<td></td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+</tr>
+<tr>
+<td>FCRL4</td>
+<td>FCRLs</td>
+<td>not in data</td>
+<td></td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+</tr>
+<tr>
+<td>FCRL5</td>
+<td>FCRLs</td>
+<td>not in data</td>
+<td></td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+</tr>
+<tr>
+<td>FCGR2C</td>
+<td>Fcs</td>
+<td>not in data</td>
+<td></td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+</tr>
+<tr>
+<td>KIR2DL2</td>
+<td>KIRs</td>
+<td>not in data</td>
+<td></td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+</tr>
+<tr>
+<td>KIR2DL5A</td>
+<td>KIRs</td>
+<td>not in data</td>
+<td></td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+</tr>
+<tr>
+<td>KIR3DL3</td>
+<td>KIRs</td>
+<td>not in data</td>
+<td></td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+</tr>
+<tr>
+<td>KLRF2</td>
+<td>KLRs</td>
+<td>not in data</td>
+<td></td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+</tr>
+<tr>
+<td>LILRB5</td>
+<td>LILRBs</td>
+<td>not in data</td>
+<td></td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+</tr>
+<tr>
+<td>NCR2</td>
+<td>Others</td>
+<td>not in data</td>
+<td></td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+</tr>
+<tr>
+<td>VSTM1</td>
+<td>Others</td>
+<td>not in data</td>
+<td></td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+</tr>
+<tr>
+<td>VSTM4</td>
+<td>Others</td>
+<td>not in data</td>
+<td></td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+</tr>
+<tr>
+<td>SIGLEC11</td>
+<td>SIGLECs</td>
+<td>not in data</td>
+<td></td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+</tr>
+<tr>
+<td>SIGLEC12</td>
+<td>SIGLECs</td>
+<td>not in data</td>
+<td></td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+</tr>
+<tr>
+<td>SIGLEC5</td>
+<td>SIGLECs</td>
+<td>not in data</td>
+<td></td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+</tr>
+<tr>
+<td>SIGLEC6</td>
+<td>SIGLECs</td>
+<td>not in data</td>
+<td></td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+</tr>
+<tr>
+<td>SIGLEC8</td>
+<td>SIGLECs</td>
+<td>not in data</td>
+<td></td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+<td>nan</td>
+</tr>
+</tbody>
+</table>
+<p>Broadly detected receptors with zero counts in a whole dataset — probably absent from that dataset's gene list (0-filled at merge), which deflates its groups: VSIR: Borcherding2021_ccRCC, Rahim2023_HNSCC_LN, Yost2019_BCC_skin, Yost2019_SCC_skin, Zheng2021_BC</p>
+<p><a href="figures/combined_cd8_atlas_IR_examples_umap_acb8f386d29b.png"><img src="figures/combined_cd8_atlas_IR_examples_umap_acb8f386d29b.png" width="50%"></a></p>
+<hr>
+<h2 id="82-does-expression-depend-on-cell-state-or-disease">8.2. Does expression depend on cell state or disease?</h2>
+<p><a href="figures/combined_cd8_atlas_IR_by_state_acb8f386d29b.png"><img src="figures/combined_cd8_atlas_IR_by_state_acb8f386d29b.png" width="50%"></a></p>
+<p><a href="figures/combined_cd8_atlas_IR_by_disease_acb8f386d29b.png"><img src="figures/combined_cd8_atlas_IR_by_disease_acb8f386d29b.png" width="50%"></a></p>
+<p><a href="figures/combined_cd8_atlas_IR_state_vs_disease_spread_acb8f386d29b.png"><img src="figures/combined_cd8_atlas_IR_state_vs_disease_spread_acb8f386d29b.png" width="50%"></a></p>
+<p>Largest spread by cell state: TIGIT 72% (exhausted) vs 21% (naive/memory); CTLA4 48% (exhausted) vs 8% (effector); KLRB1 54% (effector) vs 16% (naive/memory); LAG3 49% (cytotoxic) vs 12% (naive/memory); PDCD1 31% (exhausted) vs 6% (naive/memory)</p>
+<p>Largest spread by disease × compartment: LAG3 71% (CPI-induced colitis (tissue)) vs 3% (MIS-C (recovered) (PBMC)); TIGIT 68% (Cutaneous SCC (tissue)) vs 4% (MIS-C (PBMC)); KLRG1 59% (Rheumatoid arthritis (PBMC)) vs 2% (Celiac disease (tissue)); VSIR 55% (MIS-C (PBMC)) vs 0% (Clear cell renal carcinoma (PBMC)); KLRB1 61% (Crohn's disease (tissue)) vs 6% (MIS-C (PBMC))</p>
+<p>Spreads are descriptive: disease groups differ in state composition and are confounded with study and tissue, so disease spread partly reflects those (pseudobulk / mixed model is the test).</p></div>
+      <div id="view-image" hidden><img id="viewImage" alt=""></div>
+      <div id="view-umap" class="h5ad-summary" hidden>
+        <div id="h5adHeadline" class="h5ad-headline"></div>
+        <div class="h5ad-umap-layout">
+          <div class="h5ad-umap-plot-area">
+            <div class="h5ad-umap-plot-row">
+              <div class="h5ad-umap-canvas">
+                <svg id="umapSvg" class="h5ad-umap-svg" viewBox="0 0 460 345" xmlns="http://www.w3.org/2000/svg"></svg>
+                <div id="umapTooltip" class="h5ad-umap-tooltip" hidden></div>
+              </div>
+              <div id="umapLegend" class="h5ad-umap-legend"></div>
+            </div>
+            <div class="h5ad-umap-mode-row">
+              <div class="h5ad-umap-mode-switch">
+                <label><input type="radio" name="umapMode" value="cell"> Select cell</label>
+                <label><input type="radio" name="umapMode" value="group" checked> Select group</label>
+              </div>
+              <div id="markerPanel" class="h5ad-marker-panel"></div>
+            </div>
+          </div>
+          <div class="h5ad-panel">
+            <div id="datasetInfo" class="hint"></div>
+            <div id="panelRows" class="h5ad-panel-rows"></div>
+            <div class="h5ad-gene-field">
+              <div id="geneChips" class="h5ad-gene-chips"></div>
+              <div class="h5ad-gene-input-wrap">
+                <input id="geneInput" placeholder="Add a gene..." autocomplete="off">
+                <div id="geneDropdown" class="h5ad-row-dropdown" hidden></div>
+              </div>
+              <div id="geneMessage" class="gene-message"></div>
+            </div>
+          </div>
+        </div>
+        <details class="h5ad-columns"><summary>obs columns</summary>
+          <table class="h5ad-table" id="obsTable"></table>
+        </details>
+      </div>
+    </div>
+  </section>
+  <div class="pane-resizer"></div>
+  <aside class="pipeline-pane">
+    <div class="pipeline-header">Pipeline view</div>
+    <div id="pipelineStatus" class="pipeline-status">Loading&hellip;</div>
+    <div id="pipelineGraph" class="pipeline-graph"><div class="empty-state">Loading&hellip;</div></div>
+  </aside>
+</main>
+<script>
+const DATASETS = [{"name": "pca_umap_7ac4947d7c38", "label": "pca_umap"}, {"name": "integrate_scanorama_8e03fe6195ce", "label": "integrate_scanorama"}, {"name": "umap_integrated_9fd20a4ccc48", "label": "umap_integrated"}, {"name": "label_states_5dc5b4a8c776", "label": "label_states"}, {"name": "findallmarkers_7de13a3f27d7", "label": "findallmarkers"}];
+const FILES = ["figures/cohort_overview_ddb0f9255b4f.png", "figures/t_cell_selection_scores_1906005890fa.png", "figures/combined_cd8_umap_pca_pre_integration_7ac4947d7c38.png", "figures/combined_cd8_umap_pca_vs_integrated_before_9fd20a4ccc48.png", "figures/combined_cd8_umap_pca_vs_integrated_after_9fd20a4ccc48.png", "figures/combined_cd8_sanity_check_scores_5dc5b4a8c776.png", "figures/umap_plot_combined_cd8_overview_5dc5b4a8c776.png", "figures/combined_cd8_umap_disease_5dc5b4a8c776.png", "figures/combined_cd8_umap_disease_detail_5dc5b4a8c776.png", "figures/combined_cd8_umap_state_markers_7fab62d5e576.png", "figures/combined_cd8_umap_gd_score_c342a86b362c.png", "figures/combined_cd8_umap_celltypes_integrated_c342a86b362c.png", "figures/combined_cd8_umap_celltypes_pca_c342a86b362c.png", "figures/umap_plot_combined_cd8_umap_scores_integrated_vs_raw_c342a86b362c.png", "figures/combined_cd8_dotplot_IR_X_leiden_integrated_5cf612fee8e8.png", "figures/combined_cd8_dotplot_IR_X_state_integrated_5cf612fee8e8.png", "figures/combined_cd8_dotplot_IR_X_disease_integrated_5cf612fee8e8.png", "figures/combined_cd8_dotplot_IR_X_disease_detail_integrated_5cf612fee8e8.png", "figures/combined_cd8_dotplot_IR_PBMC_vs_TIL_integrated_5cf612fee8e8.png", "figures/combined_cd8_dotplot_IR_X_leiden_raw_5cf612fee8e8.png", "figures/combined_cd8_dotplot_IR_X_state_raw_5cf612fee8e8.png", "figures/combined_cd8_dotplot_IR_X_disease_raw_5cf612fee8e8.png", "figures/combined_cd8_dotplot_IR_X_disease_detail_raw_5cf612fee8e8.png", "figures/combined_cd8_dotplot_IR_PBMC_vs_TIL_raw_5cf612fee8e8.png", "figures/combined_cd8_boxplot_IR_X_leiden_integrated_5cf612fee8e8.png", "figures/combined_cd8_stripplot_IR_X_leiden_integrated_5cf612fee8e8.png", "figures/combined_cd8_boxplot_IR_X_leiden_raw_5cf612fee8e8.png", "figures/combined_cd8_stripplot_IR_X_leiden_raw_5cf612fee8e8.png", "figures/dotplot_leiden_allmarkers_7de13a3f27d7.png", "figures/combined_cd8_umap_IR_integrated_embedding_integrated_7de13a3f27d7.png", "figures/combined_cd8_umap_IR_integrated_embedding_raw_7de13a3f27d7.png", "figures/combined_cd8_umap_IR_pca_embedding_integrated_7de13a3f27d7.png", "figures/combined_cd8_umap_IR_pca_embedding_raw_7de13a3f27d7.png", "figures/combined_cd8_atlas_studies_acb8f386d29b.png", "figures/combined_cd8_atlas_diseases_acb8f386d29b.png", "figures/combined_cd8_atlas_states_acb8f386d29b.png", "figures/combined_cd8_atlas_umap_overview_acb8f386d29b.png", "figures/combined_cd8_atlas_umap_disease_acb8f386d29b.png", "figures/combined_cd8_atlas_IR_detection_acb8f386d29b.png", "figures/combined_cd8_atlas_IR_examples_umap_acb8f386d29b.png", "figures/combined_cd8_atlas_IR_by_state_acb8f386d29b.png", "figures/combined_cd8_atlas_IR_by_disease_acb8f386d29b.png", "figures/combined_cd8_atlas_IR_state_vs_disease_spread_acb8f386d29b.png"];
+const HAS_PIPELINE = true;
+const SLUG = "cd8_atlas";
+const RUN = "20261006_160046_610254";
+const REPORT_FILENAME = "report_20261006_160046_610254.md";
+const esc = t => String(t).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const truncate = (t, n) => (t = String(t), t.length > n ? t.slice(0, n - 1) + "…" : t);
+
+const themeButton = document.getElementById("themeButton");
+function applyTheme(theme) {
+  if (theme === "dark") document.documentElement.dataset.theme = "dark";
+  else delete document.documentElement.dataset.theme;
+  themeButton.querySelector(".theme-label").textContent = theme === "dark" ? "Dark" : "Light";
+}
+let currentTheme = "light";
+try { currentTheme = localStorage.getItem("bioreport-theme") || "light"; } catch (e) {}
+applyTheme(currentTheme);
+themeButton.addEventListener("click", () => {
+  currentTheme = currentTheme === "dark" ? "light" : "dark";
+  try { localStorage.setItem("bioreport-theme", currentTheme); } catch (e) {}
+  applyTheme(currentTheme);
+});
+
+
+// ---------- sidebar ----------
+async function renderReportList() {
+  let manifest = [];
+  try { manifest = await (await fetch("../../../reports.json")).json(); } catch (error) {}
+  const element = document.getElementById("reportList");
+  element.innerHTML = manifest.map(r => `
+    <a class="file-row ${r.slug === SLUG && (r.run || "") === RUN ? "selected" : ""}"
+       href="../../${encodeURIComponent(r.slug)}/${r.run ? encodeURIComponent(r.run) + "/" : ""}">
+      <span><span class="folder-icon"></span></span>
+      <span class="file-name"><span class="file-name-base">${esc(r.title)}</span></span>
+      <span class="file-size">${esc(String(r.timestamp || "").slice(0, 16))}</span>
+    </a>`).join("") || '<div class="hint" style="padding:4px 7px">this report only</div>';
+}
+
+function renderViewList() {
+  const rows = [`<button class="file-row selected" data-view="report">
+      <span><span class="file-icon"></span></span>
+      <span class="file-name"><span class="file-name-base">${esc(REPORT_FILENAME)}</span></span>
+      <span class="file-size">md</span></button>`];
+  DATASETS.forEach(d => rows.push(`<button class="file-row" data-view="umap:${esc(d.name)}">
+      <span><span class="file-icon h5ad"></span></span>
+      <span class="file-name"><span class="file-name-base">${esc(d.label)}</span></span>
+      <span class="file-size">h5ad</span></button>`));
+  if (FILES.length) {
+    rows.push(`<button class="file-row" id="figuresToggle">
+      <span><span class="folder-icon"></span></span>
+      <span class="file-name"><span class="file-name-base">figures</span></span>
+      <span class="file-size">${FILES.length}</span></button>`);
+    rows.push('<div id="figureRows" hidden>' + FILES.map(f => `
+      <button class="file-row file-row-indent" data-view="figure:${esc(f)}">
+        <span><span class="file-icon"></span></span>
+        <span class="file-name"><span class="file-name-base">${esc(f.split("/").pop())}</span></span>
+      </button>`).join("") + "</div>");
+  }
+  const element = document.getElementById("viewList");
+  element.innerHTML = rows.join("");
+  element.querySelectorAll(".file-row[data-view]").forEach(row =>
+    row.addEventListener("click", () => switchView(row.dataset.view)));
+  const toggle = document.getElementById("figuresToggle");
+  if (toggle) toggle.addEventListener("click", () => {
+    const box = document.getElementById("figureRows");
+    box.hidden = !box.hidden;
+  });
+}
+
+function switchView(view) {
+  document.querySelectorAll("#viewList .file-row[data-view]").forEach(row =>
+    row.classList.toggle("selected", row.dataset.view === view));
+  const reportView = document.getElementById("view-report");
+  const umapView = document.getElementById("view-umap");
+  const imageView = document.getElementById("view-image");
+  reportView.hidden = true; umapView.hidden = true; imageView.hidden = true;
+  const title = document.getElementById("viewerTitle");
+  if (view === "report") {
+    reportView.hidden = false;
+    title.textContent = REPORT_FILENAME;
+  } else if (view.startsWith("umap:")) {
+    umapView.hidden = false;
+    const name = view.slice(5);
+    title.textContent = "cache/" + name + ".h5ad — interactive UMAP (freezeframe)";
+    loadDataset(name);
+  } else if (view.startsWith("figure:")) {
+    const path = view.slice(7);
+    imageView.hidden = false;
+    document.getElementById("viewImage").src = path;
+    title.textContent = path;
+    const box = document.getElementById("figureRows");
+    if (box && box.hidden) box.hidden = false;
+  }
+}
+
+// ---------- report step blocks ----------
+function wrapStepBlocks() {
+  const container = document.getElementById("view-report");
+  const blocks = [];
+  let element = container.firstElementChild;
+  while (element) {
+    const next = element.nextElementSibling;
+    const bodyText = next ? (next.textContent || "").trim() : "";
+    const isStep = element.tagName === "H4" && bodyText.startsWith("function:");
+    const isLoad = element.tagName === "H4" && bodyText.startsWith("file_version:");
+    if (!isStep && !isLoad) { element = next; continue; }
+    const block = document.createElement("div");
+    block.className = "markdown-step-block";
+    container.insertBefore(block, element);
+    let node = element;
+    while (node) {
+      const after = node.nextElementSibling;
+      block.appendChild(node);
+      if (after && ["H1", "H2", "H3", "H4", "HR"].includes(after.tagName)) break;
+      node = after;
+    }
+    if (isStep) blocks.push(block);
+    element = block.nextElementSibling;
+  }
+  return blocks;
+}
+
+function selectStep(stepNumber, scroll) {
+  document.querySelectorAll(".markdown-step-block").forEach(block =>
+    block.classList.toggle("markdown-step-highlight", block.dataset.step === String(stepNumber)));
+  document.querySelectorAll("#pipelineGraph .pipeline-node").forEach(g =>
+    g.classList.toggle("selected", g.dataset.step === String(stepNumber)));
+  if (scroll) {
+    switchView("report");
+    const target = document.querySelector(`.markdown-step-block[data-step="${stepNumber}"]`);
+    if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}
+
+// ---------- pipeline ----------
+function svgLine(x1, y1, x2, y2, cls, arrow) {
+  return `<line class="${cls}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"${arrow ? ' marker-end="url(#pipelineArrow)"' : ""}></line>`;
+}
+
+function layoutPipeline(graph) {
+  const byId = {};
+  graph.nodes.forEach(node => (byId[node.id] = node));
+  const SPINE_X = 300;
+  const spine = graph.nodes.filter(node => node.type === "source" || node.type === "adata");
+  const pos = {}, stepMeta = {};
+  let y = 80, maxX = SPINE_X + 220;
+  spine.forEach(node => {
+    pos[node.id] = { x: SPINE_X, y };
+    const figureEdges = graph.edges.filter(edge => edge.type === "figure" && edge.from === node.id);
+    figureEdges.forEach((edge, index) => {
+      const column = Math.floor(index / 3), row = index % 3;
+      pos[edge.to] = { x: SPINE_X + 210 + column * 150, y: y - 34 + row * 34 };
+      maxX = Math.max(maxX, pos[edge.to].x + 150);
+    });
+    const stepEdge = graph.edges.find(edge => edge.type === "step" && edge.from === node.id);
+    if (!stepEdge) { y += 110; return; }
+    const step = byId[stepEdge.step_id];
+    const params = step && step.parameters ? Object.entries(step.parameters) : [];
+    const lines = params.slice(0, 3).map(([key, value]) => truncate(key + ": " + value, 34));
+    if (params.length > 3) lines.push("+" + (params.length - 3) + " more");
+    const height = Math.max(56, 34 + (lines.length + 1) * 16);
+    const stepY = y + 44 + height / 2;
+    if (step) { pos[step.id] = { x: SPINE_X, y: stepY }; stepMeta[step.id] = { lines, height }; }
+    const inputEdges = graph.edges.filter(edge => edge.type === "load_side" && edge.to === stepEdge.step_id);
+    inputEdges.forEach((edge, index) => {
+      pos[edge.from] = { x: SPINE_X - 240, y: stepY + (index - (inputEdges.length - 1) / 2) * 40 };
+    });
+    y = y + 44 + height + 44;
+  });
+  return { pos, stepMeta, width: maxX + 40, height: y + 40 };
+}
+
+async function renderPipeline(stepBlocks) {
+  const statusElement = document.getElementById("pipelineStatus");
+  const graphElement = document.getElementById("pipelineGraph");
+  if (!HAS_PIPELINE) {
+    statusElement.textContent = "No pipeline graph in this export.";
+    graphElement.innerHTML = '<div class="empty-state">No pipeline graph.</div>';
+    return;
+  }
+  let graph;
+  try { graph = await (await fetch("pipeline.json")).json(); }
+  catch (error) {
+    statusElement.textContent = "No pipeline graph in this export.";
+    graphElement.innerHTML = '<div class="empty-state">No pipeline graph.</div>';
+    return;
+  }
+  statusElement.textContent = REPORT_FILENAME;
+  const byId = {};
+  graph.nodes.forEach(node => (byId[node.id] = node));
+  const { pos, stepMeta, width, height } = layoutPipeline(graph);
+  const parts = [
+    '<defs><marker id="pipelineArrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">' +
+    '<path d="M 0 0 L 8 4 L 0 8 z" fill="#626a73"></path></marker></defs>'
+  ];
+  graph.edges.forEach(edge => {
+    if (edge.type === "load_top") {
+      const target = pos[edge.to];
+      if (target) parts.push(svgLine(target.x, target.y - 58, target.x, target.y - 19, "pipeline-edge load-edge", true));
+      return;
+    }
+    const a = pos[edge.from], b = pos[edge.to];
+    if (!a || !b) return;
+    if (edge.type === "step") {
+      const meta = stepMeta[edge.step_id], stepPos = pos[edge.step_id];
+      if (meta && stepPos) {
+        parts.push(svgLine(a.x, a.y + 16, stepPos.x, stepPos.y - meta.height / 2 - 2, "pipeline-edge", true));
+        parts.push(svgLine(stepPos.x, stepPos.y + meta.height / 2, b.x, b.y - 17, "pipeline-edge", true));
+      } else {
+        parts.push(svgLine(a.x, a.y + 16, b.x, b.y - 17, "pipeline-edge", true));
+      }
+    } else if (edge.type === "figure") {
+      parts.push(svgLine(a.x + 15, a.y, b.x - 13, b.y, "pipeline-edge figure-edge", false));
+    } else if (edge.type === "load_side") {
+      const stepPos = pos[edge.to];
+      if (stepPos) parts.push(svgLine(a.x + 10, a.y, stepPos.x - 117, stepPos.y, "pipeline-edge load-edge", true));
+    }
+  });
+  graph.nodes.forEach(node => {
+    const p = pos[node.id];
+    if (!p) return;
+    if (node.type === "source" || node.type === "adata") {
+      const dotClass = node.type === "source" ? "pipeline-source-dot" : "pipeline-data-dot";
+      const base = String(node.path || "").split("/").pop() || "";
+      const stem = base.endsWith(".h5ad") ? base.slice(0, -5) : base;
+      const dataset = DATASETS.find(d => d.name === stem);
+      parts.push(`<g class="pipeline-node"${dataset ? ` data-dataset="${esc(dataset.name)}"` : ""}>
+        <circle class="${dotClass}" cx="${p.x}" cy="${p.y}" r="15"></circle>
+        <text class="pipeline-label" x="${p.x + 24}" y="${p.y + 4}">${esc(truncate(node.label, 24))}</text>
+        <title>${esc(node.path || node.label)}${dataset ? " — click to open the interactive UMAP" : ""}</title></g>`);
+    } else if (node.type === "step") {
+      const meta = stepMeta[node.id], boxWidth = 230;
+      if (!meta) return;
+      const top = p.y - meta.height / 2;
+      const labels = [`<text class="pipeline-label" x="${p.x}" y="${top + 22}" text-anchor="middle">${esc(truncate(node.label, 28))}</text>`];
+      meta.lines.forEach((line, index) => labels.push(
+        `<text class="pipeline-small-label" x="${p.x}" y="${top + 40 + index * 16}" text-anchor="middle">${esc(line)}</text>`));
+      parts.push(`<g class="pipeline-node" data-step="${node.step_number}">
+        <rect class="pipeline-step-box" x="${p.x - boxWidth / 2}" y="${top}" width="${boxWidth}" height="${meta.height}" rx="6"></rect>
+        ${labels.join("")}<title>${esc(node.label)}</title></g>`);
+    } else if (node.type === "input") {
+      parts.push(`<g class="pipeline-node"><circle class="pipeline-input-dot" cx="${p.x}" cy="${p.y}" r="9"></circle>
+        <text class="pipeline-small-label" x="${p.x - 14}" y="${p.y + 4}" text-anchor="end">${esc(truncate(node.label, 26))}</text>
+        <title>${esc(node.label)}</title></g>`);
+    } else if (node.type === "figure") {
+      parts.push(`<g class="pipeline-node" data-figure="${esc(node.path)}">
+        <circle class="pipeline-figure-dot" cx="${p.x}" cy="${p.y}" r="11"></circle>
+        <text class="pipeline-small-label" x="${p.x + 16}" y="${p.y + 4}">${esc(truncate(node.label, 16))}</text>
+        <title>${esc(node.label)} — click to open</title></g>`);
+    }
+  });
+  graphElement.innerHTML =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">${parts.join("")}</svg>`;
+  const stepNodes = graph.nodes.filter(node => node.type === "step")
+    .sort((a, b) => (a.step_number ?? 0) - (b.step_number ?? 0));
+  stepNodes.forEach((node, index) => {
+    if (index < stepBlocks.length) stepBlocks[index].dataset.step = node.step_number;
+  });
+  document.querySelectorAll("#pipelineGraph g[data-step]").forEach(g =>
+    g.addEventListener("click", () => selectStep(g.dataset.step, true)));
+  document.querySelectorAll("#pipelineGraph g[data-dataset]").forEach(g =>
+    g.addEventListener("click", () => switchView("umap:" + g.dataset.dataset)));
+  document.querySelectorAll("#pipelineGraph g[data-figure]").forEach(g =>
+    g.addEventListener("click", () => switchView("figure:" + g.dataset.figure)));
+  stepBlocks.forEach(block => block.addEventListener("click", () => {
+    if (block.dataset.step !== undefined) selectStep(block.dataset.step, false);
+  }));
+}
+
+// ---------- UMAP viewer ----------
+const PALETTE10 = ["#1f77b4","#ff7f0e","#2ca02c","#d62728","#9467bd","#8c564b","#e377c2","#7f7f7f","#bcbd22","#17becf"];
+const PALETTE20 = ["#1f77b4","#ff7f0e","#279e68","#d62728","#aa40fc","#8c564b","#e377c2","#b5bd61","#17becf","#aec7e8",
+                   "#ffbb78","#98df8a","#ff9896","#c5b0d5","#c49c94","#f7b6d2","#dbdb8d","#9edae5","#ad494a","#8c6d31"];
+const PALETTE28 = ["#023fa5","#7d87b9","#bec1d4","#d6bcc0","#bb7784","#8e063b","#4a6fe3","#8595e1","#b5bbe3","#e6afb9",
+                   "#e07b91","#d33f6a","#11c638","#8dd593","#c6dec7","#ead3c6","#f0b98d","#ef9708","#0fcfc0","#9cded6",
+                   "#d5eae7","#f3e1eb","#f6c4e1","#f79cd4","#7f7f7f","#c7c7c7","#1CE6FF","#336600"];
+const NA_COLOR = "#9aa4af";
+const VIRIDIS_STOPS = [[68,1,84],[70,50,126],[54,92,141],[39,127,142],[31,161,135],[74,193,109],[160,218,57],[253,231,37]];
+
+function paletteFor(count) {
+  if (count <= 10) return PALETTE10;
+  if (count <= 20) return PALETTE20;
+  if (count <= 28) return PALETTE28;
+  return null;
+}
+
+function viridis(t) {
+  const scaled = Math.max(0, Math.min(1, t)) * (VIRIDIS_STOPS.length - 1);
+  const low = Math.floor(scaled), frac = scaled - low;
+  const a = VIRIDIS_STOPS[low], b = VIRIDIS_STOPS[Math.min(low + 1, VIRIDIS_STOPS.length - 1)];
+  const mix = i => Math.round(a[i] + (b[i] - a[i]) * frac);
+  return `rgb(${mix(0)},${mix(1)},${mix(2)})`;
+}
+
+const umapState = {
+  name: null, overview: null, positions: [], colorKey: null, genes: [], geneValues: {},
+  selectedGroup: null, mode: "group", hoverGroup: null, hoverIndex: null,
+};
+
+async function loadDataset(name) {
+  try {
+  if (umapState.name !== name) {
+    const response = await fetch(`umap/${name}/overview.json`);
+    if (!response.ok) throw new Error(`overview.json: HTTP ${response.status}`);
+    const overview = await response.json();
+    umapState.name = name;
+    umapState.overview = overview;
+    umapState.genes = [];
+    umapState.geneValues = {};
+    umapState.selectedGroup = null;
+    const points = overview.umap, pad = 16, W = 460, H = 345;
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    points.forEach(p => {
+      minX = Math.min(minX, p[0]); maxX = Math.max(maxX, p[0]);
+      minY = Math.min(minY, p[1]); maxY = Math.max(maxY, p[1]);
+    });
+    const scale = Math.min((W - 2 * pad) / (maxX - minX || 1), (H - 2 * pad) / (maxY - minY || 1));
+    umapState.positions = points.map(p => [pad + (p[0] - minX) * scale, H - pad - (p[1] - minY) * scale]);
+    const preferred = overview.obs_columns.find(c => /leiden|cluster|state|cell_type/i.test(c.name))
+      || overview.obs_columns.find(c => c.kind === "categorical") || overview.obs_columns[0];
+    umapState.colorKey = preferred ? "obs:" + preferred.name : null;
+    const fullCells = (overview.cache && overview.cache.n_obs_full) || overview.n_obs;
+    document.getElementById("datasetInfo").innerHTML =
+      `<b>${overview.n_obs}</b> of ${fullCells} cells (fixed-seed freezeframe) &middot; ${overview.n_vars} genes &middot; layer ${esc((overview.cache && overview.cache.primary_layer) || "X")}`;
+    const cacheMeta = overview.cache || {};
+    const layers = [].concat(cacheMeta.layers_full || []).join(", ");
+    document.getElementById("h5adHeadline").innerHTML =
+      `<span class="h5ad-headline-size">${overview.n_obs} &times; ${overview.n_vars}</span>` +
+      `<span>freezeframe of ${cacheMeta.n_obs_full ?? overview.n_obs} cells &times; ${cacheMeta.n_vars_full ?? overview.n_vars} genes</span>` +
+      (layers ? `<span>layers: ${esc(layers)}</span>` : "") +
+      `<span>primary layer: ${esc(cacheMeta.primary_layer || "X")}</span>`;
+    document.getElementById("obsTable").innerHTML =
+      "<tr><th>column</th><th>kind</th><th>detail</th></tr>" +
+      overview.obs_columns.map(column => {
+        const detail = column.kind === "categorical"
+          ? `${(column.categories || []).length} groups: ${(column.categories || []).slice(0, 6).join(", ")}${(column.categories || []).length > 6 ? ", …" : ""}`
+          : column.kind;
+        return `<tr><td>${esc(column.name)}</td><td>${esc(column.kind)}</td><td>${esc(detail)}</td></tr>`;
+      }).join("");
+    renderPanelRows();
+    renderChips();
+  }
+  drawUmap();
+  renderMarkerPanel();
+  } catch (error) {
+    document.getElementById("datasetInfo").innerHTML =
+      `<span style="color:var(--danger)">Failed to load dataset ${esc(name)}: ${esc(String(error))}</span>`;
+    document.getElementById("umapSvg").innerHTML = "";
+    document.getElementById("umapLegend").innerHTML = "";
+    document.getElementById("markerPanel").innerHTML = "";
+  }
+}
+
+function currentValues() {
+  const key = umapState.colorKey, overview = umapState.overview;
+  if (!key || !overview) return null;
+  if (key.startsWith("obs:")) {
+    const column = overview.obs_columns.find(c => c.name === key.slice(4));
+    if (!column) return null;
+    if (column.kind === "numeric") return { kind: "numeric", label: column.name, values: column.values };
+    return { kind: "categorical", label: column.name, values: column.values.map(v => v == null ? "NA" : String(v)) };
+  }
+  const gene = key.slice(5);
+  return { kind: "numeric", label: gene, values: umapState.geneValues[gene] || [] };
+}
+
+function drawUmap() {
+  const svg = document.getElementById("umapSvg");
+  umapState.hoverGroup = null;
+  umapState.hoverIndex = null;
+  const info = currentValues();
+  let colorOf = () => NA_COLOR;
+  let order = umapState.positions.map((_, i) => i);
+  if (info && info.kind === "numeric") {
+    const numbers = info.values.map(v => v == null ? NaN : Number(v));
+    const finite = numbers.filter(Number.isFinite);
+    const min = finite.length ? Math.min(...finite) : 0;
+    const max = finite.length ? Math.max(...finite) : 1;
+    const span = max - min || 1;
+    colorOf = i => Number.isFinite(numbers[i]) ? viridis((numbers[i] - min) / span) : NA_COLOR;
+    order = order.slice().sort((a, b) => (numbers[a] || 0) - (numbers[b] || 0));
+    renderLegendNumeric(info.label, min, max);
+  } else if (info) {
+    const categories = [...new Set(info.values)];
+    const palette = paletteFor(categories.length);
+    const colorMap = {};
+    categories.forEach((category, index) => {
+      colorMap[category] = category === "NA" ? NA_COLOR : (palette ? palette[index % palette.length] : NA_COLOR);
+    });
+    colorOf = i => colorMap[info.values[i]];
+    renderLegendCategorical(info.label, categories, colorMap, info.values);
+  }
+  const selected = umapState.selectedGroup;
+  svg.innerHTML = order.map(i => {
+    const p = umapState.positions[i];
+    const dim = selected != null && info && info.kind === "categorical" && info.values[i] !== selected;
+    return `<circle class="h5ad-umap-point" data-i="${i}" cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.2" fill="${colorOf(i)}" fill-opacity="${dim ? 0.12 : 0.75}"></circle>`;
+  }).join("");
+}
+
+function renderLegendCategorical(label, categories, colorMap, values) {
+  const counts = {};
+  values.forEach(v => { counts[v] = (counts[v] || 0) + 1; });
+  const legend = document.getElementById("umapLegend");
+  legend.innerHTML = `<div class="h5ad-legend-title">${esc(label)}</div>` + categories.map(category =>
+    `<div class="h5ad-legend-item ${umapState.selectedGroup === category ? "is-active" : ""}" data-cat="${esc(category)}" title="${counts[category]} cells">
+       <span class="h5ad-legend-swatch" style="background:${colorMap[category]}"></span><span>${esc(truncate(category, 20))}</span>
+     </div>`).join("");
+  legend.querySelectorAll(".h5ad-legend-item").forEach(item => item.addEventListener("click", () => {
+    umapState.selectedGroup = umapState.selectedGroup === item.dataset.cat ? null : item.dataset.cat;
+    drawUmap();
+    renderMarkerPanel();
+  }));
+}
+
+function renderLegendNumeric(label, min, max) {
+  const stops = [];
+  for (let i = 0; i <= 10; i++) stops.push(viridis(i / 10));
+  document.getElementById("umapLegend").innerHTML = `<div class="h5ad-legend-title">${esc(label)}</div>
+    <div style="display:flex;gap:6px;min-height:96px">
+      <span class="h5ad-legend-bar" style="background:linear-gradient(to top, ${stops.join(",")})"></span>
+      <span class="h5ad-legend-scale"><span>${max.toFixed(2)}</span><span>${((min + max) / 2).toFixed(2)}</span><span>${min.toFixed(2)}</span></span>
+    </div>`;
+}
+
+function renderPanelRows() {
+  const overview = umapState.overview;
+  const rows = [];
+  const panelRow = (key, name, summary, removable) => {
+    const active = umapState.colorKey === key;
+    return `<div class="h5ad-panel-row ${active ? "is-color-by" : ""}">
+      <span class="h5ad-row-colorby"><input type="radio" name="colorby" value="${esc(key)}" ${active ? "checked" : ""}></span>
+      <span class="h5ad-row-name" title="${esc(name)}">${esc(name)}</span>
+      ${removable ? `<button class="h5ad-row-trash" data-gene="${esc(name)}" title="remove">&#10005;</button>` : "<span></span>"}
+      <span class="h5ad-row-value" data-default="${esc(summary)}">${esc(summary)}</span></div>`;
+  };
+  overview.obs_columns.forEach(column => {
+    const summary = column.kind === "categorical"
+      ? `categorical &middot; ${(column.categories || []).length} groups`.replace("&middot;", "·")
+      : column.kind;
+    rows.push(panelRow("obs:" + column.name, column.name, summary, false));
+  });
+  umapState.genes.forEach(gene => rows.push(panelRow("gene:" + gene, gene, "gene expression", true)));
+  const element = document.getElementById("panelRows");
+  element.innerHTML = rows.join("");
+  element.querySelectorAll('input[type="radio"]').forEach(radio =>
+    radio.addEventListener("change", () => setColorKey(radio.value)));
+  element.querySelectorAll(".h5ad-row-trash").forEach(trash =>
+    trash.addEventListener("click", () => removeGene(trash.dataset.gene)));
+}
+
+async function setColorKey(key) {
+  if (key.startsWith("gene:")) {
+    try { await ensureGeneValues(key.slice(5)); }
+    catch (error) { showGeneMessage(error.message); return; }
+  }
+  if (umapState.colorKey !== key) umapState.selectedGroup = null;
+  umapState.colorKey = key;
+  renderPanelRows();
+  drawUmap();
+  renderMarkerPanel();
+}
+
+// ---------- genes ----------
+function showGeneMessage(message) { document.getElementById("geneMessage").textContent = message || ""; }
+
+function resolveGene(query) {
+  const overview = umapState.overview, wanted = query.trim().toUpperCase();
+  let index = -1;
+  if (overview.gene_symbols) index = overview.gene_symbols.findIndex(s => s && s.toUpperCase() === wanted);
+  if (index < 0) index = overview.var_names.findIndex(v => v.toUpperCase() === wanted);
+  if (index < 0) return null;
+  return { index, name: (overview.gene_symbols && overview.gene_symbols[index]) || overview.var_names[index] };
+}
+
+async function ensureGeneValues(query) {
+  const hit = resolveGene(query);
+  if (!hit) throw new Error("gene not found: " + query);
+  if (umapState.geneValues[hit.name]) return hit.name;
+  const shard = umapState.overview.gene_shard[hit.index];
+  if (shard == null || shard < 0) throw new Error("not exported: " + query);
+  const shardName = "shard_" + String(shard).padStart(3, "0") + ".json";
+  const data = await (await fetch(`umap/${umapState.name}/genes/${shardName}`)).json();
+  const entry = data[umapState.overview.var_names[hit.index]] || [[], []];
+  const values = new Array(umapState.overview.umap.length).fill(0);
+  entry[0].forEach((cell, k) => { values[cell] = entry[1][k]; });
+  umapState.geneValues[hit.name] = values;
+  return hit.name;
+}
+
+async function addGene(query) {
+  let name;
+  try { name = await ensureGeneValues(query); }
+  catch (error) { showGeneMessage(error.message); return; }
+  showGeneMessage("");
+  if (!umapState.genes.includes(name)) umapState.genes.push(name);
+  renderChips();
+  await setColorKey("gene:" + name);
+}
+
+function removeGene(name) {
+  umapState.genes = umapState.genes.filter(gene => gene !== name);
+  if (umapState.colorKey === "gene:" + name) {
+    const preferred = umapState.overview.obs_columns.find(c => c.kind === "categorical") || umapState.overview.obs_columns[0];
+    umapState.colorKey = preferred ? "obs:" + preferred.name : null;
+  }
+  renderChips();
+  renderPanelRows();
+  drawUmap();
+  renderMarkerPanel();
+}
+
+function renderChips() {
+  document.getElementById("geneChips").innerHTML = umapState.genes.map(gene =>
+    `<span class="h5ad-gene-chip">${esc(gene)}<button class="h5ad-gene-chip-remove" data-gene="${esc(gene)}">&#10005;</button></span>`).join("");
+  document.querySelectorAll("#geneChips .h5ad-gene-chip-remove").forEach(remove =>
+    remove.addEventListener("click", () => removeGene(remove.dataset.gene)));
+}
+
+function geneCandidates(query) {
+  const overview = umapState.overview, wanted = query.trim().toUpperCase();
+  if (!wanted || !overview) return [];
+  const source = (overview.gene_symbols && overview.gene_symbols.some(s => s)) ? overview.gene_symbols : overview.var_names;
+  const starts = [], contains = [];
+  for (let i = 0; i < source.length && starts.length < 20; i++) {
+    const symbol = source[i];
+    if (!symbol) continue;
+    const upper = symbol.toUpperCase();
+    if (upper.startsWith(wanted)) starts.push(symbol);
+    else if (contains.length < 20 && upper.includes(wanted)) contains.push(symbol);
+  }
+  return [...new Set([...starts, ...contains])].slice(0, 20);
+}
+
+function setupGeneInput() {
+  const input = document.getElementById("geneInput");
+  const dropdown = document.getElementById("geneDropdown");
+  const commit = value => {
+    value.split(/[,;]/).map(part => part.trim()).filter(Boolean).forEach(part => addGene(part));
+    input.value = "";
+    dropdown.hidden = true;
+  };
+  input.addEventListener("input", () => {
+    const candidates = geneCandidates(input.value);
+    if (!candidates.length) { dropdown.hidden = true; return; }
+    dropdown.innerHTML = candidates.map(c => `<div class="h5ad-dropdown-item">${esc(c)}</div>`).join("");
+    dropdown.hidden = false;
+    dropdown.querySelectorAll(".h5ad-dropdown-item").forEach(item =>
+      item.addEventListener("mousedown", () => commit(item.textContent)));
+  });
+  input.addEventListener("keydown", event => { if (event.key === "Enter") commit(input.value); });
+  input.addEventListener("blur", () => setTimeout(() => { dropdown.hidden = true; }, 150));
+}
+
+// ---------- markers ----------
+function renderMarkerPanel() {
+  const element = document.getElementById("markerPanel");
+  const overview = umapState.overview;
+  const markers = overview && overview.findallmarkers;
+  if (!markers || !markers.rows || !markers.rows.length) { element.innerHTML = ""; return; }
+  const info = currentValues();
+  const isClusterColumn = info && info.kind === "categorical" && markers.cluster_col && info.label === markers.cluster_col;
+  const group = umapState.hoverGroup != null ? umapState.hoverGroup : umapState.selectedGroup;
+  let body;
+  if (umapState.mode === "cell") {
+    body = '<div class="hint">Switch to "Select group" mode to see cluster markers.</div>';
+  } else if (!isClusterColumn) {
+    body = `<div class="hint">Color by <b>${esc(markers.cluster_col || "the cluster column")}</b> and hover or click a group to see its markers.</div>`;
+  } else if (group == null) {
+    body = '<div class="hint">Hover or click a group (points or legend) to see its top markers.</div>';
+  } else {
+    const rows = markers.rows.filter(row => String(row.cluster) === String(group))
+      .sort((a, b) => (b.avg_log2FC ?? 0) - (a.avg_log2FC ?? 0)).slice(0, 8);
+    const maxLfc = Math.max(...rows.map(row => row.avg_log2FC ?? 0), 0.001);
+    body = '<div class="h5ad-marker-list">' + rows.map(row => {
+      const pct = Math.round(100 * (row["pct.1"] ?? 0));
+      const lfcWidth = Math.round(100 * Math.max(0, row.avg_log2FC ?? 0) / maxLfc);
+      return `<div class="h5ad-marker-row">
+        <div class="h5ad-marker-gene" data-gene="${esc(row.gene)}">${esc(row.gene)}</div>
+        <div class="h5ad-marker-meter"><span class="h5ad-marker-meter-label">in group</span>
+          <span class="h5ad-marker-meter-track"><span class="h5ad-marker-meter-fill" style="width:${pct}%"></span></span>
+          <span class="h5ad-marker-meter-value">${pct}%</span></div>
+        <div class="h5ad-marker-meter"><span class="h5ad-marker-meter-label">log2FC</span>
+          <span class="h5ad-marker-meter-track"><span class="h5ad-marker-meter-fill" style="width:${lfcWidth}%"></span></span>
+          <span class="h5ad-marker-meter-value">${(row.avg_log2FC ?? 0).toFixed(2)}</span></div>
+      </div>`;
+    }).join("") + "</div>";
+  }
+  const suffix = group != null && umapState.mode === "group" ? " — " + esc(String(group)) : "";
+  element.innerHTML = `<div class="h5ad-marker-panel-title">FindAllMarkers${suffix}</div>` + body;
+  element.querySelectorAll(".h5ad-marker-gene").forEach(gene =>
+    gene.addEventListener("click", () => addGene(gene.dataset.gene)));
+}
+
+// ---------- cell / group selection by hovering ----------
+function updatePanelCellValues(index) {
+  const overview = umapState.overview;
+  const format = (value, numeric) =>
+    value == null ? "NA" : (numeric ? Number(value).toFixed(3) : String(value));
+  document.querySelectorAll("#panelRows .h5ad-row-value").forEach((node, i) => {
+    if (i < overview.obs_columns.length) {
+      const column = overview.obs_columns[i];
+      node.textContent = format(column.values[index], column.kind === "numeric");
+    } else {
+      const gene = umapState.genes[i - overview.obs_columns.length];
+      const values = umapState.geneValues[gene];
+      node.textContent = values ? format(values[index], true) : "";
+    }
+  });
+}
+
+function resetPanelCellValues() {
+  document.querySelectorAll("#panelRows .h5ad-row-value").forEach(node => {
+    node.textContent = node.dataset.default || "";
+  });
+}
+
+function applyHoverOpacity(info) {
+  const active = umapState.hoverGroup != null ? umapState.hoverGroup : umapState.selectedGroup;
+  document.querySelectorAll("#umapSvg .h5ad-umap-point").forEach(circle => {
+    const value = info.values[Number(circle.dataset.i)];
+    circle.setAttribute("fill-opacity", active != null && value !== active ? "0.12" : "0.75");
+  });
+}
+
+function hoverCell(index, circle) {
+  if (umapState.hoverIndex === index) return;
+  clearCellHover();
+  umapState.hoverIndex = index;
+  circle.setAttribute("r", "5.5");
+  circle.setAttribute("fill-opacity", "1");
+  circle.classList.add("is-selected");
+  updatePanelCellValues(index);
+}
+
+function clearCellHover() {
+  if (umapState.hoverIndex == null) return;
+  const previous = document.querySelector(`#umapSvg circle[data-i="${umapState.hoverIndex}"]`);
+  if (previous) {
+    previous.setAttribute("r", "3.2");
+    previous.setAttribute("fill-opacity", "0.75");
+    previous.classList.remove("is-selected");
+  }
+  umapState.hoverIndex = null;
+}
+
+function hoverGroup(group) {
+  if (umapState.hoverGroup === group) return;
+  umapState.hoverGroup = group;
+  const info = currentValues();
+  if (info && info.kind === "categorical") applyHoverOpacity(info);
+  renderMarkerPanel();
+}
+
+function clearHover() {
+  if (umapState.mode === "cell") {
+    clearCellHover();
+    resetPanelCellValues();
+    return;
+  }
+  if (umapState.hoverGroup == null) return;
+  umapState.hoverGroup = null;
+  const info = currentValues();
+  if (info && info.kind === "categorical") applyHoverOpacity(info);
+  renderMarkerPanel();
+}
+
+function setupPointer() {
+  const canvas = document.querySelector(".h5ad-umap-canvas");
+  const tooltip = document.getElementById("umapTooltip");
+  const positionTooltip = target => {
+    const canvasRect = canvas.getBoundingClientRect();
+    const pointRect = target.getBoundingClientRect();
+    tooltip.style.left = (pointRect.left + pointRect.width / 2 - canvasRect.left) + "px";
+    tooltip.style.top = (pointRect.top - canvasRect.top) + "px";
+    tooltip.hidden = false;
+  };
+  canvas.addEventListener("mousemove", event => {
+    const target = event.target;
+    const isPoint = target.classList && target.classList.contains("h5ad-umap-point");
+    if (!isPoint) { clearHover(); tooltip.hidden = true; return; }
+    const info = currentValues();
+    if (!info) { tooltip.hidden = true; return; }
+    const index = Number(target.dataset.i);
+    const value = info.values[index];
+    if (umapState.mode === "cell") {
+      hoverCell(index, target);
+      tooltip.textContent = `cell ${index} · ${info.label}: ` +
+        (info.kind === "numeric" ? (value == null ? "NA" : Number(value).toFixed(2)) : value);
+      positionTooltip(target);
+    } else {
+      if (info.kind === "categorical") {
+        hoverGroup(value);
+        tooltip.textContent = `${info.label}: ${value}`;
+      } else {
+        tooltip.textContent = `${info.label}: ` + (value == null ? "NA" : Number(value).toFixed(2));
+      }
+      positionTooltip(target);
+    }
+  });
+  canvas.addEventListener("mouseleave", () => { clearHover(); tooltip.hidden = true; });
+  canvas.addEventListener("click", event => {
+    const target = event.target;
+    if (!target.classList || !target.classList.contains("h5ad-umap-point")) return;
+    if (umapState.mode !== "group") return;
+    const info = currentValues();
+    if (!info || info.kind !== "categorical") return;
+    const group = info.values[Number(target.dataset.i)];
+    umapState.selectedGroup = umapState.selectedGroup === group ? null : group;
+    drawUmap();
+    renderMarkerPanel();
+  });
+}
+
+function setupModeSwitch() {
+  document.querySelectorAll('input[name="umapMode"]').forEach(radio =>
+    radio.addEventListener("change", () => {
+      umapState.mode = radio.value;
+      umapState.hoverGroup = null;
+      umapState.hoverIndex = null;
+      resetPanelCellValues();
+      drawUmap();
+      renderMarkerPanel();
+    }));
+}
+
+// ---------- deep links (#umap:<dataset> opens the interactive viewer) ----------
+function applyHashView() {
+  const hash = decodeURIComponent(location.hash.slice(1));
+  if (hash.startsWith("umap:") && DATASETS.some(d => d.name === hash.slice(5))) switchView(hash);
+}
+window.addEventListener("hashchange", applyHashView);
+
+// ---------- init ----------
+renderReportList();
+renderViewList();
+setupGeneInput();
+setupPointer();
+setupModeSwitch();
+const stepBlocks = wrapStepBlocks();
+renderPipeline(stepBlocks);
+applyHashView();
+</script>
+</body>
+</html>
