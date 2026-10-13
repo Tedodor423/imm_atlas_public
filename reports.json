@@ -1,8 +1,17 @@
 [
   {
     "slug": "cd8_atlas",
+    "run": "20261013_195147_858896",
+    "title": "cambridge-factors-cd8",
+    "timestamp": "2026-10-13 19:51:47",
+    "n_figures": 28,
+    "n_datasets": 4,
+    "pdf_url": null
+  },
+  {
+    "slug": "cd8_atlas",
     "run": "20261008_195833_300764",
-    "title": "cd8_atlas",
+    "title": "cd8_atlas max cell amount",
     "timestamp": "2026-10-08 19:58:33",
     "n_figures": 212,
     "n_datasets": 4,
@@ -11,7 +20,7 @@
   {
     "slug": "cd8_atlas",
     "run": "20261008_174820_766872",
-    "title": "cd8_atlas",
+    "title": "cd8_atlas reduced cell amount",
     "timestamp": "2026-10-08 17:48:20",
     "n_figures": 149,
     "n_datasets": 4,
