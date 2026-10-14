@@ -1,5 +1,14 @@
 [
   {
+    "slug": "cd8_atlas",
+    "run": "20261014_104600_739627",
+    "title": "cd8_atlas",
+    "timestamp": "2026-10-14 10:46:00",
+    "n_figures": 177,
+    "n_datasets": 4,
+    "pdf_url": null
+  },
+  {
     "slug": "plot_single",
     "run": "20261014_102407_343624",
     "title": "CD4+CD8 whoel atlas inhibitories",
