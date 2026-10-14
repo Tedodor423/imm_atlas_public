@@ -1,8 +1,26 @@
 [
   {
     "slug": "cd8_atlas",
+    "run": "20261013_230741_226616",
+    "title": "cd8+4 cambridge factors",
+    "timestamp": "2026-10-13 23:07:41",
+    "n_figures": 54,
+    "n_datasets": 4,
+    "pdf_url": null
+  },
+  {
+    "slug": "cd8_atlas",
+    "run": "20261013_230046_323924",
+    "title": "cd8 cambridge factors",
+    "timestamp": "2026-10-13 23:00:46",
+    "n_figures": 56,
+    "n_datasets": 4,
+    "pdf_url": null
+  },
+  {
+    "slug": "cd8_atlas",
     "run": "20261013_195147_858896",
-    "title": "cambridge-factors-cd8",
+    "title": "old cambridge factors",
     "timestamp": "2026-10-13 19:51:47",
     "n_figures": 28,
     "n_datasets": 4,
