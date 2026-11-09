@@ -1,6 +1,24 @@
 [
   {
     "slug": "cd8_atlas",
+    "run": "20261103_142452_079405",
+    "title": "cd8_atlas \u2014 cd4+8 scVI",
+    "timestamp": "2026-11-03 14:24:52",
+    "n_figures": 105,
+    "n_datasets": 15,
+    "pdf_url": null
+  },
+  {
+    "slug": "cd8_atlas",
+    "run": "20261022_122816_811188",
+    "title": "cd8_atlas",
+    "timestamp": "2026-10-22 12:28:16",
+    "n_figures": 26,
+    "n_datasets": 4,
+    "pdf_url": null
+  },
+  {
+    "slug": "cd8_atlas",
     "run": "20261014_104600_739627",
     "title": "cd8_atlas",
     "timestamp": "2026-10-14 10:46:00",
