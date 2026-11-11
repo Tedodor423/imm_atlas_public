@@ -1,5 +1,14 @@
 [
   {
+    "slug": "atlas_full",
+    "run": "20261111_061125_420016",
+    "title": "atlas_full \u2014 merged datasets only",
+    "timestamp": "2026-11-11 06:11:25",
+    "n_figures": 487,
+    "n_datasets": 0,
+    "pdf_url": null
+  },
+  {
     "slug": "cd8_atlas",
     "run": "20261103_142452_079405",
     "title": "cd8_atlas \u2014 cd4+8 scVI",
